@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class DatabaseAPI:
     def __init__(self):
-        interface: DatabaseServiceInterface = self._get_service()
+        self.interface: DatabaseServiceInterface = self._get_service()
 
     def _get_service(self) -> DatabaseServiceInterface:
         db_type = os.getenv("DB_TYPE", "sqlite").lower()
@@ -28,3 +28,9 @@ class DatabaseAPI:
                 return PostgreSQLService(host, port, user, password, database)
             case _:
                 raise ValueError(f"Unsupported DB_TYPE: {db_type}")
+
+    def db_connection(self):
+        """
+        Context manager for database connection.
+        """
+        return self.interface.db_connection()
