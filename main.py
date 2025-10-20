@@ -1,4 +1,5 @@
 from src.walkhighlands.api import WalkhighlandsAPI
+from src.users.api import UsersAPI
 import argparse
 import sys
 import logging
@@ -10,7 +11,11 @@ logger = logging.getLogger(__name__)
 def initialize(args):
     logger.info("Initializing with arguments", extra={"args": args})
     WalkhighlandsAPI.initialize_app()
+<<<<<<< Updated upstream
     logger.info("Initialization complete.")
+=======
+    UsersAPI.initialize_users()
+>>>>>>> Stashed changes
 
 
 def fetch_hills_data(args):
@@ -40,6 +45,10 @@ def reset_database(args):
     logger.info("Database reset complete.")
 
 
+def add_user(args):
+    UsersAPI.add_user(args.name, args.location)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Walkhighlands CLI Tool",
@@ -48,9 +57,14 @@ def main():
 
     Commands:
         init: Initialize the application.
+<<<<<<< Updated upstream
         fetch-hills: Fetch and store Munro data.
         fetch-walks: Fetch walks for a specific hill.
         reset-db: Reset the database.
+=======
+        fetch-munros: Fetch and store Munro data.
+        add-user: Add a new user.
+>>>>>>> Stashed changes
     """,
     )
 
@@ -66,17 +80,25 @@ def main():
         choices=["hills", "walks", "walk_hill_decomposition"],
         help="Specify which tables to reset.",
     )
+    user_parser = subparsers.add_parser("add-user", help="Add a new user")
     args = parser.parse_args()
 
     match args.command:
         case "init":
             initialize(args)
+<<<<<<< Updated upstream
         case "fetch-hills":
             fetch_hills_data(args)
         case "fetch-walks":
             fetch_walks(args)
         case "reset-db":
             reset_database(args)
+=======
+        case "fetch-munros":
+            fetch_munro_data(args)
+        case "add-user":
+            add_user(args)
+>>>>>>> Stashed changes
         case _:
             logger.error("Unknown command")
             sys.exit(1)
