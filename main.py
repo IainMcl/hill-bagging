@@ -22,8 +22,7 @@ def fetch_hills_data(args):
 
 def fetch_walks(args):
     logger.info("Fetching walks with arguments:", args)
-    # hill_urls = WalkhighlandsAPI.get_hill_urls()
-    hill_urls = ["https://www.walkhighlands.co.uk/munros/creag-a-mhaim"]
+    hill_urls = WalkhighlandsAPI.get_hill_urls()
     for hill_url in hill_urls:
         walks = WalkhighlandsAPI.get_walks_for_hill(hill_url)
         for walk in walks:

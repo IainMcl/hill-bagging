@@ -48,7 +48,7 @@ class WalkhighlandsData:
                     ),
                 )
                 conn.commit()
-            logger.info(f"Saved hill data for {hill_data.name} to the database.")
+            logger.debug(f"Saved hill data for {hill_data.name} to the database.")
         except Exception:
             logger.exception(f"An error occurred while saving hill data")
 
@@ -79,9 +79,11 @@ class WalkhighlandsData:
                     ),
                 )
                 walk_id = cursor.lastrowid
-                logger.info(f"Inserted walk with ID: {walk_id}")
+                logger.debug(f"Inserted walk with ID: {walk_id}")
                 for hill_id in walk_data.hill_ids:
-                    logger.info(f"Inserting into walk_hill_decomposition: hill_id={hill_id}, walk_id={walk_id}")
+                    logger.debug(
+                        f"Inserting into walk_hill_decomposition: hill_id={hill_id}, walk_id={walk_id}"
+                    )
                     cursor.execute(
                         """
                         INSERT INTO walk_hill_decomposition (hill_id, walk_id)
@@ -90,7 +92,7 @@ class WalkhighlandsData:
                         (hill_id, walk_id),
                     )
                 conn.commit()
-            logger.info(f"Inserted walk data for {walk_data.title} into the database.")
+            logger.debug(f"Inserted walk data for {walk_data.title} into the database.")
         except sqlite3.IntegrityError:
             logger.warning(
                 f"Walk with URL {walk_data.url} already exists in the database."
