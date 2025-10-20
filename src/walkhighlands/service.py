@@ -278,3 +278,40 @@ class WalkhighlandsService:
         except Exception as e:
             print(f"Error instantiating WalkData model for {walk_url or ''}: {e}")
             return None
+
+    @classmethod
+    def extract_gpx_download_url(cls, bs_content: str) -> str | None:
+        """Extract the GPX download URL from the walk page HTML content."""
+        gpx_link_tag = bs_content.find(
+            "a", string=re.compile(r"\bexport gps route file\b", re.IGNORECASE)
+        )
+        if gpx_link_tag and "href" in gpx_link_tag.attrs:
+            relative_url = gpx_link_tag["href"]
+            full_url = (
+                f"{cls.BASE_URL}{relative_url}"
+                if relative_url.startswith("/")
+                else relative_url
+            )
+            return full_url
+        return None
+
+    @staticmethod
+    def extract_gpx_download_url(bs_content: str) -> str | None:
+        """Extract the GPX download URL from the walk page HTML content."""
+        gpx_link_tag = bs_content.find(
+            "a",
+            string=re.compile(
+                r"\bI STILL WANT TO DOWNLOAD THE FILE - I AGREE TO THE TERMS\b",
+                re.IGNORECASE,
+            ),
+        )
+        if gpx_link_tag and "href" in gpx_link_tag.attrs:
+            relative_url = gpx_link_tag["href"]
+            full_url = (
+                f"{WalkhighlandsService.BASE_URL}{relative_url}"
+                if relative_url.startswith("/")
+                else relative_url
+            )
+            return full_url
+        return None
+

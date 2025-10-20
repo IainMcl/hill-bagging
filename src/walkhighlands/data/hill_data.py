@@ -232,3 +232,23 @@ class WalkhighlandsData:
                 cursor.execute("DROP TABLE IF EXISTS hills")
                 WalkhighlandsData.create_hill_data_table()
             conn.commit()
+
+    @staticmethod
+    def fetch_walk_url_by_id(walk_id: int) -> str | None:
+        """Retrieve walk URL from the database using the walk ID."""
+        logger.debug(f"Fetching walk URL for ID: {walk_id}")
+        db_api = DatabaseAPI()
+        with db_api.db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT url FROM walks WHERE id = ?
+                """,
+                (walk_id,),
+            )
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                logger.warning(f"Walk with ID {walk_id} not found in the database.")
+                return None

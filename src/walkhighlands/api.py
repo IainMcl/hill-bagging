@@ -67,3 +67,36 @@ class WalkhighlandsAPI:
     def reset_database(tables: list[str] | None = None) -> None:
         """Reset the database."""
         WalkhighlandsData.reset_database(tables)
+
+    @staticmethod
+    def get_gpx_for_walk(
+        *, walk_url: str | None = None, walk_id: int | None = None
+    ) -> str | None:
+        """Fetch GPX data for a specific walk."""
+        if walk_id is not None:
+            walk_url = WalkhighlandsData.fetch_walk_url_by_id(walk_id)
+            if not walk_url:
+                logger.error(f"No walk URL found for walk ID: {walk_id}")
+                return None
+        if walk_url is None:
+            logger.error("Either walk_url or walk_id must be provided.")
+            return None
+        logger.info(f"Fetching GPX data for walk URL: {walk_url}")
+        walk_data = ScraperAPI.fetch_data(walk_url)
+        content = walk_data.get("content", "")
+        if not content:
+            logger.error(f"No content fetched from the walk page: {walk_url}")
+            return None
+        gpx_download_url = WalkhighlandsService.extract_gpx_download_url(content)
+        if not gpx_download_url:
+            logger.error(f"No GPX download URL found on the walk page: {walk_url}")
+            return None
+        gpx_data = ScraperAPI.fetch_data(gpx_download_url)
+        content = gpx_data.get("content", "")
+        if not content:
+            logger.error(
+                f"No GPX content fetched from the GPX download URL: {gpx_download_url}"
+            )
+            return None
+        gpx_download_url = WalkhighlandsService.extract_gpx_download_url(content)
+        return gpx_download_url
