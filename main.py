@@ -4,6 +4,7 @@ import sys
 import time
 import logging
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -13,7 +14,7 @@ def initialize(args):
     logger.info("Initialization complete.")
 
 
-def fetch_munro_data(args):
+def fetch_hills_data(args):
     logger.info("Fetching Munro data with arguments:", args)
     munros = WalkhighlandsAPI.get_munros()
     WalkhighlandsAPI.save_munros(munros)
@@ -21,8 +22,8 @@ def fetch_munro_data(args):
 
 def fetch_walks(args):
     logger.info("Fetching walks with arguments:", args)
-    hill_urls = WalkhighlandsAPI.get_hill_urls()
-    # hill_urls = ["https://www.walkhighlands.co.uk/munros/creag-a-mhaim"]
+    # hill_urls = WalkhighlandsAPI.get_hill_urls()
+    hill_urls = ["https://www.walkhighlands.co.uk/munros/creag-a-mhaim"]
     for hill_url in hill_urls:
         walks = WalkhighlandsAPI.get_walks_for_hill(hill_url)
         for walk in walks:
@@ -35,6 +36,12 @@ def fetch_walks(args):
         # time.sleep(1)  # Be polite and avoid overwhelming the server
 
 
+def reset_database(args):
+    logger.info("Resetting database with arguments:", args)
+    WalkhighlandsAPI.reset_database(args.tables)
+    logger.info("Database reset complete.")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Walkhighlands CLI Tool",
@@ -45,6 +52,7 @@ def main():
         init: Initialize the application.
         fetch-hills: Fetch and store Munro data.
         fetch-walks: Fetch walks for a specific hill.
+        reset-db: Reset the database.
     """,
     )
 
@@ -52,10 +60,17 @@ def main():
     subparsers.required = True
     init_parser = subparsers.add_parser("init", help="Initialize the application")
     fetch_hill_parser = subparsers.add_parser(
-        "fetch-munros", help="Fetch and store Munro data"
+        "fetch-hills", help="Fetch and store Munro data"
     )
     fetch_walks_parser = subparsers.add_parser(
         "fetch-walks", help="Fetch walks for a specific hill"
+    )
+    reset_db_parser = subparsers.add_parser("reset-db", help="Reset the database")
+    reset_db_parser.add_argument(
+        "--tables",
+        nargs="+",
+        choices=["hills", "walks", "walk_hill_decomposition"],
+        help="Specify which tables to reset.",
     )
     args = parser.parse_args()
 
@@ -63,9 +78,11 @@ def main():
         case "init":
             initialize(args)
         case "fetch-hills":
-            fetch_munro_data(args)
+            fetch_hills_data(args)
         case "fetch-walks":
             fetch_walks(args)
+        case "reset-db":
+            reset_database(args)
         case _:
             logger.error("Unknown command")
             sys.exit(1)

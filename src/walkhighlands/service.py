@@ -140,6 +140,40 @@ class WalkhighlandsService:
         return walk_links
 
     @classmethod
+    def _get_hill_ids(cls, bs_content: BeautifulSoup) -> list[int]:
+        """Extract hill IDs from the 'Summits Climbed' section of a walk page."""
+        hill_ids: list[int] = []
+        summits_header = bs_content.find(
+            "h2", string=re.compile(r"\bSummits Climbed\b", re.IGNORECASE)
+        )
+        if not summits_header:
+            logger.warning("Summits climbed header not found.")
+            return hill_ids
+
+        # Find the container for the summits climbed, which could be a 'dl' or 'div'
+        summits_container = summits_header.find_next_sibling()
+        if not summits_container:
+            logger.warning("Summits climbed container not found.")
+            return hill_ids
+
+        # Find all links within the container
+        summit_links = summits_container.find_all("a", href=True)
+        for summit_link in summit_links:
+            href = summit_link.get("href")
+            if not href:
+                continue
+
+            if href.startswith("https://"):
+                mountain_url = href
+            else:
+                mountain_url = f"{cls.BASE_URL}{href}"
+
+            hill_id = WalkhighlandsData.get_hill_id_by_url(mountain_url)
+            if hill_id is not None:
+                hill_ids.append(hill_id)
+        return hill_ids
+
+    @classmethod
     def parse_walk_data(cls, bs_content: str, walk_url: str) -> WalkData | None:
         """Parse HTML content to extract detailed walk data."""
         # Implementation would go here
@@ -189,27 +223,7 @@ class WalkhighlandsService:
                 pass
 
         # --- 4. Hill IDs  ---
-        # NOTE: This still requires a proper lookup in a real system.
-        hill_ids: list[int] = []
-        summits_header = bs_content.find(
-            "h2", string=re.compile(r"\bSummits Climbed\b", re.IGNORECASE)
-        )
-        if not summits_header:
-            print("Warning: Summits climbed header not found.")
-            return None
-        summits_climbed_container = summits_header.find_next_sibling("dl")
-        if not summits_climbed_container:
-            print("Warning: Summits climbed container not found.")
-            return None
-        summit_links = summits_climbed_container.find_all("a", href=True)
-        for summit_link in summit_links:
-            if summit_link["href"].startswith("https://"):
-                mountain_url = summit_link["href"]
-            else:
-                mountain_url = f"{cls.BASE_URL}{summit_link['href']}"
-            hill_id = WalkhighlandsData.get_hill_id_by_url(mountain_url)
-            if hill_id is not None:
-                hill_ids.append(hill_id)
+        hill_ids = cls._get_hill_ids(bs_content)
 
         # --- 5. Parsing and Conversion (Robustness check) ---
 

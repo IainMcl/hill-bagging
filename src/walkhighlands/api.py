@@ -62,3 +62,8 @@ class WalkhighlandsAPI:
         WalkhighlandsData.create_hill_data_table()
         WalkhighlandsData.create_walk_data_table()
         WalkhighlandsData.create_walk_hill_decomp_table()
+
+    @staticmethod
+    def reset_database(tables: list[str] | None = None) -> None:
+        """Reset the database."""
+        WalkhighlandsData.reset_database(tables)

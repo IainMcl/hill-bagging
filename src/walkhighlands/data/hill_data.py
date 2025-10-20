@@ -62,11 +62,10 @@ class WalkhighlandsData:
                 cursor = conn.cursor()
                 cursor.execute(
                     """
-                    INSERT INTO walks (hill_id, title, url, grade, bog_factor, user_rating, distance, time, ascent, start_grid_ref, start_location)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT INTO walks (title, url, grade, bog_factor, user_rating, distance, time, ascent, start_grid_ref, start_location)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
-                        walk_data.hill_ids[0] if walk_data.hill_ids else None,
                         walk_data.title,
                         walk_data.url,
                         walk_data.grade,
@@ -79,13 +78,16 @@ class WalkhighlandsData:
                         walk_data.start_location,
                     ),
                 )
+                walk_id = cursor.lastrowid
+                logger.info(f"Inserted walk with ID: {walk_id}")
                 for hill_id in walk_data.hill_ids:
+                    logger.info(f"Inserting into walk_hill_decomposition: hill_id={hill_id}, walk_id={walk_id}")
                     cursor.execute(
                         """
                         INSERT INTO walk_hill_decomposition (hill_id, walk_id)
                         VALUES (?, ?)
                         """,
-                        (hill_id, cursor.lastrowid),
+                        (hill_id, walk_id),
                     )
                 conn.commit()
             logger.info(f"Inserted walk data for {walk_data.title} into the database.")
@@ -107,7 +109,6 @@ class WalkhighlandsData:
                 """
                 CREATE TABLE IF NOT EXISTS walks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    hill_id INTEGER NOT NULL,
                     title TEXT NOT NULL,
                     url TEXT NOT NULL UNIQUE,
                     grade INTEGER NOT NULL,
@@ -117,8 +118,7 @@ class WalkhighlandsData:
                     time TEXT NOT NULL,
                     ascent INTEGER NOT NULL,
                     start_grid_ref TEXT NOT NULL,
-                    start_location TEXT,
-                    FOREIGN KEY (hill_id) REFERENCES hills(id)
+                    start_location TEXT
                 )
                 """
             )
@@ -210,3 +210,23 @@ class WalkhighlandsData:
                 url = url[http_index:]
         url = url.replace("http://", "https://")
         return url
+
+    @staticmethod
+    def reset_database(tables: list[str] | None = None) -> None:
+        """Reset the database."""
+        db_api = DatabaseAPI()
+        with db_api.db_connection() as conn:
+            cursor = conn.cursor()
+            if not tables or "walk_hill_decomposition" in tables:
+                logger.info("Dropping and recreating walk_hill_decomposition table.")
+                cursor.execute("DROP TABLE IF EXISTS walk_hill_decomposition")
+                WalkhighlandsData.create_walk_hill_decomp_table()
+            if not tables or "walks" in tables:
+                logger.info("Dropping and recreating walks table.")
+                cursor.execute("DROP TABLE IF EXISTS walks")
+                WalkhighlandsData.create_walk_data_table()
+            if not tables or "hills" in tables:
+                logger.info("Dropping and recreating hills table.")
+                cursor.execute("DROP TABLE IF EXISTS hills")
+                WalkhighlandsData.create_hill_data_table()
+            conn.commit()
