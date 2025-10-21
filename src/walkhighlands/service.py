@@ -203,6 +203,8 @@ class WalkhighlandsService:
                 "dt",
                 string=re.compile(r"\b" + re.escape(text_label) + r"\b", re.IGNORECASE),
             )
+            if not label_tag:
+                return ""
             value = label_tag.find_next_sibling("dd")  # type: ignore
             return value.get_text(strip=True) if value else ""
 

@@ -42,7 +42,7 @@ to find the tests for a specific module.
 To run the tests, use the following command from the root of the project:
 
 ```bash
-pytest src/
+uv run pytest src/
 ```
 
 ## Writing tests
@@ -50,8 +50,7 @@ pytest src/
 Tests using database access should use a test database. The test database
 should be created and destroyed for each test run to ensure a clean state.
 
-Database models should use facotories to create test data. This ensures that
-tests are not dependent on specific data and can be easily modified.
+Database models should use facotories to create test data. This ensures thau
 
 ## Dependencies
 
