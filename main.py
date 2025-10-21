@@ -2,14 +2,15 @@ from src.walkhighlands.api import WalkhighlandsAPI
 from src.users.api import UsersAPI
 import argparse
 import sys
+from src.utils.logging_config import init_logging
 import logging
 
-logging.basicConfig(level=logging.INFO)
+init_logging()
 logger = logging.getLogger(__name__)
 
 
 def initialize(args):
-    logger.info("Initializing with arguments", extra={"args": args})
+    logger.info("Initializing with arguments", extra={"cli_args": args})
     WalkhighlandsAPI.initialize_app()
     logger.info("Initialization complete.")
 
@@ -42,7 +43,7 @@ def reset_database(args):
 
 
 def add_user(args):
-    UsersAPI.add_user(args.name, args.location)
+    UsersAPI.add_user(args.name, args.postcode)
 
 
 def main():
@@ -56,6 +57,7 @@ def main():
         fetch-hills: Fetch and store Munro data.
         fetch-walks: Fetch walks for a specific hill.
         reset-db: Reset the database.
+        add-user: Add a new user.
     """,
     )
 
@@ -72,6 +74,9 @@ def main():
         help="Specify which tables to reset.",
     )
     user_parser = subparsers.add_parser("add-user", help="Add a new user")
+    user_parser.add_argument("name", type=str, help="Name of the user")
+    user_parser.add_argument("postcode", type=str, help="Postcode of the user")
+
     args = parser.parse_args()
 
     match args.command:
@@ -83,6 +88,8 @@ def main():
             fetch_walks(args)
         case "reset-db":
             reset_database(args)
+        case "add-user":
+            add_user(args)
         case _:
             logger.error("Unknown command")
             sys.exit(1)
