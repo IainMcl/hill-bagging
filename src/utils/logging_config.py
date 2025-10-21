@@ -1,12 +1,44 @@
 import logging
 import json
 
+# List of standard LogRecord attributes
+STANDARD_LOG_RECORD_ATTRIBUTES = {
+    "name",
+    "msg",
+    "args",
+    "levelname",
+    "levelno",
+    "pathname",
+    "filename",
+    "module",
+    "exc_info",
+    "exc_text",
+    "stack_info",
+    "lineno",
+    "funcName",
+    "created",
+    "msecs",
+    "relativeCreated",
+    "thread",
+    "threadName",
+    "processName",
+    "process",
+    "taskName",
+    "message",
+}
+
 
 class CustomFormatter(logging.Formatter):
     def format(self, record):
         message = super().format(record)
-        if hasattr(record, "extra") and record.extra:
-            message += f" (extra: {json.dumps(record.extra)})"
+
+        extra_data = {}
+        for key, value in record.__dict__.items():
+            if key not in STANDARD_LOG_RECORD_ATTRIBUTES:
+                extra_data[key] = value
+
+        if extra_data:
+            message += f" (extra: {json.dumps(extra_data)})\n"
         return message
 
 
