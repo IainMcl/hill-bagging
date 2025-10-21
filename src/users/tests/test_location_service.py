@@ -5,7 +5,7 @@ from src.users.dtos import LatLon
 from geopy.exc import GeocoderTimedOut, GeocoderServiceError
 
 
-@patch('src.users.location_service.Nominatim')
+@patch("src.users.location_service.Nominatim")
 def test_get_lat_lon_from_postcode_success(mock_nominatim):
     mock_geolocator = MagicMock()
     mock_nominatim.return_value = mock_geolocator
@@ -23,7 +23,7 @@ def test_get_lat_lon_from_postcode_success(mock_nominatim):
     mock_geolocator.geocode.assert_called_once_with(postcode.strip())
 
 
-@patch('src.users.location_service.Nominatim')
+@patch("src.users.location_service.Nominatim")
 def test_get_lat_lon_from_postcode_not_found(mock_nominatim):
     mock_geolocator = MagicMock()
     mock_nominatim.return_value = mock_geolocator
@@ -31,12 +31,14 @@ def test_get_lat_lon_from_postcode_not_found(mock_nominatim):
 
     postcode = "INVALIDPOSTCODE"
 
-    with pytest.raises(ValueError, match=f"Could not find location for postcode: {postcode}"):
+    with pytest.raises(
+        ValueError, match=f"Could not find location for postcode: {postcode}"
+    ):
         get_lat_lon_from_postcode(postcode)
     mock_geolocator.geocode.assert_called_once_with(postcode.strip())
 
 
-@patch('src.users.location_service.Nominatim')
+@patch("src.users.location_service.Nominatim")
 def test_get_lat_lon_from_postcode_service_error(mock_nominatim):
     mock_geolocator = MagicMock()
     mock_nominatim.return_value = mock_geolocator
@@ -44,12 +46,14 @@ def test_get_lat_lon_from_postcode_service_error(mock_nominatim):
 
     postcode = "EH1 1AA"
 
-    with pytest.raises(ConnectionError, match="Geocoding service error: Service unavailable"):
+    with pytest.raises(
+        ConnectionError, match="Geocoding service error: Service unavailable"
+    ):
         get_lat_lon_from_postcode(postcode)
     mock_geolocator.geocode.assert_called_once_with(postcode.strip())
 
 
-@patch('src.users.location_service.Nominatim')
+@patch("src.users.location_service.Nominatim")
 def test_get_lat_lon_from_postcode_timeout_error(mock_nominatim):
     mock_geolocator = MagicMock()
     mock_nominatim.return_value = mock_geolocator

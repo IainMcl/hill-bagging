@@ -2,6 +2,7 @@ import logging
 from src.users.data import UserData
 from src.users.service import UsersService
 from src.users.location_service import get_lat_lon_from_postcode
+from src.users.dtos import LatLon
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class UsersAPI:
         UserData.save_user_data(name, location)
 
     @staticmethod
-    def get_user_location(name: str) -> str:
+    def get_user_location(name: str) -> LatLon:
         location = UserData.fetch_user_location(name)
         if location is None:
             logger.warning(f"User not found: {name}")

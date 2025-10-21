@@ -61,8 +61,6 @@ def test_fetch_user_location_not_found(mock_db_api):
 
     assert fetched_location is None
 
-
-
     location = LatLon(lat=56.123, lon=-4.456)
     expected_string = "56.123,-4.456"
 

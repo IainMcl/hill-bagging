@@ -1,4 +1,5 @@
 from src.database.api import DatabaseAPI
+import sqlite3
 import logging
 from src.users.dtos import LatLon
 
@@ -40,7 +41,7 @@ class UserData:
                     (name, location_str),
                 )
                 conn.commit()
-        except Exception:
+        except sqlite3.DatabaseError:
             logger.exception(f"An error occurred while saving user data for {name}")
 
     @staticmethod
@@ -58,7 +59,7 @@ class UserData:
                 )
                 result = cursor.fetchone()
                 return UserData._parse_lat_lon_string(result[0]) if result else None
-        except Exception:
+        except sqlite3.Error:
             logger.exception(f"An error occurred while fetching location for {name}")
             return None
 

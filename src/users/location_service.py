@@ -11,7 +11,7 @@ def get_lat_lon_from_postcode(postcode: str) -> LatLon:
     search_query = postcode.strip()
     try:
         location = geolocator.geocode(search_query)
-        if location and location.latitude and location.longitude:
+        if location:
             return LatLon(lat=location.latitude, lon=location.longitude)
         else:
             raise ValueError(f"Could not find location for postcode: {postcode}")
