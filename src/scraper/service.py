@@ -10,13 +10,13 @@ class ScraperService:
     def scrape_page(url: str) -> dict[str, BeautifulSoup]:
         """Scrape data from a given webpage URL."""
         try:
-            logger.debug(f"Scraping URL: {url}")
+            logger.debug("Scraping", extra={"url": url})
             sanitized_url = ScraperService._sanitize_url(url)
             response = httpx.get(sanitized_url)
             response.raise_for_status()
             return {"content": BeautifulSoup(response.text, "html.parser")}
-        except httpx.HTTPError as e:
-            logger.error(f"An error occurred while scraping the page: {e}")
+        except httpx.HTTPError:
+            logger.exception("An error occurred while scraping the page")
             return {}
 
     @staticmethod

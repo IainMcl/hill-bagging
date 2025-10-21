@@ -77,7 +77,7 @@ class WalkhighlandsService:
                             )
                         )
 
-        logger.info(f"Parsed {len(mountain_data)} Munros from all tables.")
+        logger.info("Parsed Munros from all tables.", extra={"munro_count": len(mountain_data)})
         return mountain_data
 
     @staticmethod
@@ -92,7 +92,7 @@ class WalkhighlandsService:
             else:
                 return int(altitude.strip())
         except ValueError as e:
-            logger.error(f"Error parsing altitude '{altitude}': {e}")
+            logger.error("Error parsing altitude", extra={"altitude_string": altitude, "error": e})
             return None
 
     @classmethod
