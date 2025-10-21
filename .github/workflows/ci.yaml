@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Assuming Python 3.11 based on .python-version file
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      run: uv sync
+    - name: Run tests
+      run: uv run pytest src/
+    - name: Run linting
+      run: uv run ruff check src/
+    - name: Run pre-commit checks
+      run: uv run pre-commit run --all-files
