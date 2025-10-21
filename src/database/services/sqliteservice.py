@@ -22,6 +22,7 @@ class SQLiteService(DatabaseServiceInterface):
             self.connection = sqlite3.connect(self.db_path)
             logger.info("Created new SQLite database.", extra={"db_path": self.db_path})
             self.connection.close()
+            self.connection = None
         except sqlite3.Error as e:
             logger.error("Failed to create database", extra={"error": e})
             raise
@@ -39,6 +40,7 @@ class SQLiteService(DatabaseServiceInterface):
     def disconnect(self):
         if self.connection:
             self.connection.close()
+            self.connection = None
             logger.info("Disconnected from SQLite database")
 
     def execute_query(self, query):
