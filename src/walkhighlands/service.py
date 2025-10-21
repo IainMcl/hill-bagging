@@ -15,7 +15,7 @@ class WalkhighlandsService:
     def parse_munro_table_data(cls, bs_content: str) -> list[HillPageData]:
         """Parse HTML data to extract Munro table information."""
 
-        munro_tables = bs_content.find_all("table", {"class": "table1"})
+        munro_tables = bs_content.find_all("table", {"class": "table1"})  # type: ignore
 
         if not munro_tables:
             logger.warning("Munro tables not found in the provided HTML data.")
@@ -77,7 +77,9 @@ class WalkhighlandsService:
                             )
                         )
 
-        logger.info("Parsed Munros from all tables.", extra={"munro_count": len(mountain_data)})
+        logger.info(
+            "Parsed Munros from all tables.", extra={"munro_count": len(mountain_data)}
+        )
         return mountain_data
 
     @staticmethod
@@ -92,15 +94,18 @@ class WalkhighlandsService:
             else:
                 return int(altitude.strip())
         except ValueError as e:
-            logger.error("Error parsing altitude", extra={"altitude_string": altitude, "error": e})
+            logger.error(
+                "Error parsing altitude",
+                extra={"altitude_string": altitude, "error": e},
+            )
             return None
 
     @classmethod
     def parse_walks_for_hill(cls, bs_content: str) -> list[Walk]:
         """Parse HTML content to extract walk URLs associated with a specific hill."""
         # 1. Find the target header element
-        target_header: Tag | None = bs_content.find(
-            lambda tag: tag.name in ["h2", "h3"]
+        target_header: Tag | None = bs_content.find(  # type: ignore[arg-type]
+            lambda tag: tag.name in ["h2", "h3"]  # type: ignore[arg-type]
             and "Detailed route description and map" in tag.get_text(strip=True)
         )
 
@@ -178,27 +183,27 @@ class WalkhighlandsService:
         """Parse HTML content to extract detailed walk data."""
         # Implementation would go here
         title_tag = bs_content.find("h1")
-        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"
+        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"  # type: ignore
 
         # Locate the container that holds all the statistics
-        stats_header = bs_content.find(
+        stats_header = bs_content.find(  # type: ignore
             "h2", string=re.compile(r"\bWalk Statistics\b", re.IGNORECASE)
         )
         if not stats_header:
             logger.warning("Walk statistics header not found.")
             return None
-        stats_container = stats_header.find_next_sibling("dl")
+        stats_container = stats_header.find_next_sibling("dl")  # type: ignore
         if not stats_container:
             logger.warning("Walk statistics container not found.")
             return None
 
         # Helper function to safely extract text data from a specific statistic
         def get_stat_value(text_label: str) -> str:
-            label_tag = stats_container.find(
+            label_tag = stats_container.find(  # type: ignore
                 "dt",
                 string=re.compile(r"\b" + re.escape(text_label) + r"\b", re.IGNORECASE),
             )
-            value = label_tag.find_next_sibling("dd")
+            value = label_tag.find_next_sibling("dd")  # type: ignore
             return value.get_text(strip=True) if value else ""
 
         distance_str = get_stat_value("Distance")
@@ -207,17 +212,17 @@ class WalkhighlandsService:
         grid_ref_str = get_stat_value("Start Grid Ref")
 
         # --- 2. Grade and Bog Factor (Count icons) ---
-        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))
+        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))  # type: ignore
         bog_factor_int = len(
-            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))
+            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))  # type: ignore
         )
 
         # --- 3. User Rating (Extract value before /5) ---
-        rating_tag = bs_content.find("strong", string="Rating")
+        rating_tag = bs_content.find("strong", string="Rating")  # type: ignore
         rating_value = 0.0
-        if rating_tag and rating_tag.next_sibling:
+        if rating_tag and rating_tag.next_sibling:  # type: ignore[attr-defined]
             try:
-                rating_text = rating_tag.next_sibling.strip().split("/")[0]
+                rating_text = rating_tag.next_sibling.strip().split("/")[0]  # type: ignore[attr-defined]
                 rating_value = float(rating_text)
             except Exception:
                 pass
@@ -228,12 +233,12 @@ class WalkhighlandsService:
         # --- 5. Parsing and Conversion (Robustness check) ---
 
         try:
-            distance_km = float(re.search(r"([\d\.]+)\s*km", distance_str).group(1))
+            distance_km = float(re.search(r"([\d\.]+)\s*km", distance_str).group(1))  # type: ignore
         except Exception:
             distance_km = 0.0
 
         try:
-            ascent_m = int(re.search(r"(\d+)\s*m", ascent_str).group(1))
+            ascent_m = int(re.search(r"(\d+)\s*m", ascent_str).group(1))  # type: ignore
         except Exception:
             ascent_m = 0
 
@@ -252,12 +257,12 @@ class WalkhighlandsService:
         # --- 6. Start Location ---
         # Find string 'open in google maps'
         start_location = ""
-        maps_link = bs_content.find(
+        maps_link = bs_content.find(  # type: ignore[call-arg]
             "a",
             string=re.compile(r"\bopen in google maps\b", re.IGNORECASE),
         )
-        if maps_link:
-            start_location = maps_link.get("href", "")
+        if maps_link:  # type: ignore[attr-defined]
+            start_location = maps_link.get("href", "")  # type: ignore[attr-defined]
 
         try:
             walk_data_model = WalkData(
@@ -277,4 +282,3 @@ class WalkhighlandsService:
         except Exception:
             logger.exception("Error creating WalkData model")
             return None
-

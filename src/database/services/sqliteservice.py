@@ -29,7 +29,9 @@ class SQLiteService(DatabaseServiceInterface):
     def connect(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            logger.info("Connected to SQLite database.", extra={"db_path": self.db_path})
+            logger.info(
+                "Connected to SQLite database.", extra={"db_path": self.db_path}
+            )
         except sqlite3.Error as e:
             logger.error("Failed to connect to database", extra={"error": e})
             raise
