@@ -11,11 +11,7 @@ logger = logging.getLogger(__name__)
 def initialize(args):
     logger.info("Initializing with arguments", extra={"args": args})
     WalkhighlandsAPI.initialize_app()
-<<<<<<< Updated upstream
     logger.info("Initialization complete.")
-=======
-    UsersAPI.initialize_users()
->>>>>>> Stashed changes
 
 
 def fetch_hills_data(args):
@@ -57,14 +53,9 @@ def main():
 
     Commands:
         init: Initialize the application.
-<<<<<<< Updated upstream
         fetch-hills: Fetch and store Munro data.
         fetch-walks: Fetch walks for a specific hill.
         reset-db: Reset the database.
-=======
-        fetch-munros: Fetch and store Munro data.
-        add-user: Add a new user.
->>>>>>> Stashed changes
     """,
     )
 
@@ -86,19 +77,12 @@ def main():
     match args.command:
         case "init":
             initialize(args)
-<<<<<<< Updated upstream
         case "fetch-hills":
             fetch_hills_data(args)
         case "fetch-walks":
             fetch_walks(args)
         case "reset-db":
             reset_database(args)
-=======
-        case "fetch-munros":
-            fetch_munro_data(args)
-        case "add-user":
-            add_user(args)
->>>>>>> Stashed changes
         case _:
             logger.error("Unknown command")
             sys.exit(1)
