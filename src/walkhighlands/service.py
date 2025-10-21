@@ -185,11 +185,11 @@ class WalkhighlandsService:
             "h2", string=re.compile(r"\bWalk Statistics\b", re.IGNORECASE)
         )
         if not stats_header:
-            print("Warning: Walk statistics header not found.")
+            logger.warning("Walk statistics header not found.")
             return None
         stats_container = stats_header.find_next_sibling("dl")
         if not stats_container:
-            print("Warning: Walk statistics container not found.")
+            logger.warning("Walk statistics container not found.")
             return None
 
         # Helper function to safely extract text data from a specific statistic
@@ -240,7 +240,7 @@ class WalkhighlandsService:
         try:
             times = re.findall(r"(\d+)", duration_str)
             if len(times) >= 2:
-                # Be presumptious and alwyas take the smallest time
+                # Be presumptuous and always take the smallest time
                 duration_hr = float(times[0])
             elif len(times) == 1:
                 duration_hr = float(times[0])
@@ -273,8 +273,8 @@ class WalkhighlandsService:
                 start_location=start_location or "",
                 hill_ids=hill_ids,
             )
-            print(walk_data_model)
             return walk_data_model
-        except Exception as e:
-            print(f"Error instantiating WalkData model for {walk_url or ''}: {e}")
+        except Exception:
+            logger.exception("Error creating WalkData model")
             return None
+

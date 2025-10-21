@@ -117,7 +117,7 @@ class WalkhighlandsData:
                     bog_factor INTEGER NOT NULL,
                     user_rating REAL NOT NULL,
                     distance REAL NOT NULL,
-                    time TEXT NOT NULL,
+                    time REAL NOT NULL,
                     ascent INTEGER NOT NULL,
                     start_grid_ref TEXT NOT NULL,
                     start_location TEXT
@@ -141,7 +141,7 @@ class WalkhighlandsData:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     hill_id INTEGER NOT NULL,
                     walk_id INTEGER NOT NULL,
-                    FOREIGN KEY (hill_id) REFERENCES hills(id)
+                    FOREIGN KEY (hill_id) REFERENCES hills(id),
                     FOREIGN KEY (walk_id) REFERENCES walks(id)
                 )
                 """
@@ -194,7 +194,7 @@ class WalkhighlandsData:
         if url.endswith("%20"):
             url = url[:-3]
         # check for duplicated domain
-        # only handle until the second occurance of https:// or http://
+        # only handle until the second occurrence of https:// or http://
         if url.count("https://") > 1:
             parts = url.split("https://")
             url = "https://" + parts[-1]
