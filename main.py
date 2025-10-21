@@ -1,7 +1,6 @@
 from src.walkhighlands.api import WalkhighlandsAPI
 import argparse
 import sys
-import time
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -9,19 +8,19 @@ logger = logging.getLogger(__name__)
 
 
 def initialize(args):
-    logger.info("Initializing with arguments", extra={'args': args})
+    logger.info("Initializing with arguments", extra={"args": args})
     WalkhighlandsAPI.initialize_app()
     logger.info("Initialization complete.")
 
 
 def fetch_hills_data(args):
-    logger.info("Fetching Munro data with arguments", extra={'args': args})
+    logger.info("Fetching Munro data with arguments", extra={"args": args})
     munros = WalkhighlandsAPI.get_munros()
     WalkhighlandsAPI.save_munros(munros)
 
 
 def fetch_walks(args):
-    logger.info("Fetching walks with arguments", extra={'args': args})
+    logger.info("Fetching walks with arguments", extra={"args": args})
     hill_urls = WalkhighlandsAPI.get_hill_urls()
     for hill_url in hill_urls:
         walks = WalkhighlandsAPI.get_walks_for_hill(hill_url)
@@ -31,12 +30,12 @@ def fetch_walks(args):
             if walk_data:
                 WalkhighlandsAPI.save_walk(walk_data)
             else:
-                logger.error("Failed to fetch walk data", extra={'walk_url': walk.url})
+                logger.error("Failed to fetch walk data", extra={"walk_url": walk.url})
         # time.sleep(1)  # Be polite and avoid overwhelming the server
 
 
 def reset_database(args):
-    logger.info("Resetting database with arguments", extra={'args': args})
+    logger.info("Resetting database with arguments", extra={"args": args})
     WalkhighlandsAPI.reset_database(args.tables)
     logger.info("Database reset complete.")
 
@@ -57,13 +56,9 @@ def main():
 
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
-    init_parser = subparsers.add_parser("init", help="Initialize the application")
-    fetch_hill_parser = subparsers.add_parser(
-        "fetch-hills", help="Fetch and store Munro data"
-    )
-    fetch_walks_parser = subparsers.add_parser(
-        "fetch-walks", help="Fetch walks for a specific hill"
-    )
+    subparsers.add_parser("init", help="Initialize the application")
+    subparsers.add_parser("fetch-hills", help="Fetch and store Munro data")
+    subparsers.add_parser("fetch-walks", help="Fetch walks for a specific hill")
     reset_db_parser = subparsers.add_parser("reset-db", help="Reset the database")
     reset_db_parser.add_argument(
         "--tables",

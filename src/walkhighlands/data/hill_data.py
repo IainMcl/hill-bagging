@@ -48,7 +48,9 @@ class WalkhighlandsData:
                     ),
                 )
                 conn.commit()
-            logger.debug("Saved hill data to the database.", extra={"hill_name": hill_data.name})
+            logger.debug(
+                "Saved hill data to the database.", extra={"hill_name": hill_data.name}
+            )
         except Exception:
             logger.exception("An error occurred while saving hill data")
 
@@ -67,7 +69,7 @@ class WalkhighlandsData:
                     """,
                     (
                         walk_data.title,
-                        walk_data.url,
+                        url,
                         walk_data.grade,
                         walk_data.bog_factor,
                         walk_data.user_rating,
@@ -93,7 +95,10 @@ class WalkhighlandsData:
                         (hill_id, walk_id),
                     )
                 conn.commit()
-            logger.debug("Inserted walk data into the database.", extra={"walk_title": walk_data.title})
+            logger.debug(
+                "Inserted walk data into the database.",
+                extra={"walk_title": walk_data.title},
+            )
         except sqlite3.IntegrityError:
             logger.warning(
                 "Walk with URL already exists in the database.",
@@ -168,7 +173,9 @@ class WalkhighlandsData:
             if result:
                 return result[0]
             else:
-                logger.warning("Hill with URL not found in the database.", extra={"url": url})
+                logger.warning(
+                    "Hill with URL not found in the database.", extra={"url": url}
+                )
                 return None
 
     @staticmethod
