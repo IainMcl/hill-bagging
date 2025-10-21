@@ -1,4 +1,3 @@
-import pytest
 from src.users.service import UsersService
 from src.users.dtos import LatLon
 
