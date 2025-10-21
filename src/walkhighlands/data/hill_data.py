@@ -48,9 +48,9 @@ class WalkhighlandsData:
                     ),
                 )
                 conn.commit()
-            logger.debug(f"Saved hill data for {hill_data.name} to the database.")
+            logger.debug("Saved hill data to the database.", extra={"hill_name": hill_data.name})
         except Exception:
-            logger.exception(f"An error occurred while saving hill data")
+            logger.exception("An error occurred while saving hill data")
 
     @staticmethod
     def insert_walk(walk_data: WalkData) -> None:
@@ -79,10 +79,11 @@ class WalkhighlandsData:
                     ),
                 )
                 walk_id = cursor.lastrowid
-                logger.debug(f"Inserted walk with ID: {walk_id}")
+                logger.debug("Inserted walk.", extra={"walk_id": walk_id})
                 for hill_id in walk_data.hill_ids:
                     logger.debug(
-                        f"Inserting into walk_hill_decomposition: hill_id={hill_id}, walk_id={walk_id}"
+                        "Inserting into walk_hill_decomposition",
+                        extra={"hill_id": hill_id, "walk_id": walk_id},
                     )
                     cursor.execute(
                         """
@@ -92,10 +93,11 @@ class WalkhighlandsData:
                         (hill_id, walk_id),
                     )
                 conn.commit()
-            logger.debug(f"Inserted walk data for {walk_data.title} into the database.")
+            logger.debug("Inserted walk data into the database.", extra={"walk_title": walk_data.title})
         except sqlite3.IntegrityError:
             logger.warning(
-                f"Walk with URL {walk_data.url} already exists in the database."
+                "Walk with URL already exists in the database.",
+                extra={"walk_url": walk_data.url},
             )
         except Exception:
             logger.exception("An error occurred while inserting walk data")
@@ -117,7 +119,7 @@ class WalkhighlandsData:
                     bog_factor INTEGER NOT NULL,
                     user_rating REAL NOT NULL,
                     distance REAL NOT NULL,
-                    time TEXT NOT NULL,
+                    time REAL NOT NULL,
                     ascent INTEGER NOT NULL,
                     start_grid_ref TEXT NOT NULL,
                     start_location TEXT
@@ -141,7 +143,7 @@ class WalkhighlandsData:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     hill_id INTEGER NOT NULL,
                     walk_id INTEGER NOT NULL,
-                    FOREIGN KEY (hill_id) REFERENCES hills(id)
+                    FOREIGN KEY (hill_id) REFERENCES hills(id),
                     FOREIGN KEY (walk_id) REFERENCES walks(id)
                 )
                 """
@@ -152,7 +154,7 @@ class WalkhighlandsData:
     def get_hill_id_by_url(url: str) -> int | None:
         """Retrieve hill ID from the database using the hill URL."""
         url = WalkhighlandsData._sanitize_url(url)
-        logger.debug(f"Fetching hill ID for URL: {url}")
+        logger.debug("Fetching hill ID for URL", extra={"url": url})
         db_api = DatabaseAPI()
         with db_api.db_connection() as conn:
             cursor = conn.cursor()
@@ -166,7 +168,7 @@ class WalkhighlandsData:
             if result:
                 return result[0]
             else:
-                logger.warning(f"Hill with URL {url} not found in the database.")
+                logger.warning("Hill with URL not found in the database.", extra={"url": url})
                 return None
 
     @staticmethod
@@ -194,7 +196,7 @@ class WalkhighlandsData:
         if url.endswith("%20"):
             url = url[:-3]
         # check for duplicated domain
-        # only handle until the second occurance of https:// or http://
+        # only handle until the second occurrence of https:// or http://
         if url.count("https://") > 1:
             parts = url.split("https://")
             url = "https://" + parts[-1]

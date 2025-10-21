@@ -1,5 +1,8 @@
 from bs4 import BeautifulSoup
 import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ScraperService:
@@ -7,13 +10,13 @@ class ScraperService:
     def scrape_page(url: str) -> dict[str, BeautifulSoup]:
         """Scrape data from a given webpage URL."""
         try:
-            print(f"Scraping URL: {url}")
+            logger.debug("Scraping", extra={"url": url})
             sanitized_url = ScraperService._sanitize_url(url)
             response = httpx.get(sanitized_url)
             response.raise_for_status()
             return {"content": BeautifulSoup(response.text, "html.parser")}
-        except httpx.HTTPError as e:
-            print(f"An error occurred while scraping the page: {e}")
+        except httpx.HTTPError:
+            logger.exception("An error occurred while scraping the page")
             return {}
 
     @staticmethod
@@ -27,7 +30,7 @@ class ScraperService:
         if url.endswith("%20"):
             url = url[:-3]
         # check for duplicated domain
-        # only handle until the second occurance of https:// or http://
+        # only handle until the second occurrence of https:// or http://
         if url.count("https://") > 1:
             parts = url.split("https://")
             url = "https://" + parts[-1]

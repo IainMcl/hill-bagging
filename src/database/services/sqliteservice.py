@@ -12,25 +12,26 @@ class SQLiteService(DatabaseServiceInterface):
         self.connection = None
         if not os.path.exists(db_path):
             logger.warning(
-                f"Database file {db_path} does not exist. It will be created upon connection."
+                "Database file does not exist. It will be created upon connection.",
+                extra={"db_path": db_path},
             )
             self._create_database()
 
     def _create_database(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            logger.info(f"Created new SQLite database at {self.db_path}")
+            logger.info("Created new SQLite database.", extra={"db_path": self.db_path})
             self.connection.close()
         except sqlite3.Error as e:
-            logger.error(f"Failed to create database: {e}")
+            logger.error("Failed to create database", extra={"error": e})
             raise
 
     def connect(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            logger.info(f"Connected to SQLite database at {self.db_path}")
+            logger.info("Connected to SQLite database.", extra={"db_path": self.db_path})
         except sqlite3.Error as e:
-            logger.error(f"Failed to connect to database: {e}")
+            logger.error("Failed to connect to database", extra={"error": e})
             raise
 
     def disconnect(self):
@@ -46,10 +47,10 @@ class SQLiteService(DatabaseServiceInterface):
             cursor.execute(query)
             self.connection.commit()
             results = cursor.fetchall()
-            logger.info(f"Executed query: {query}")
+            logger.info("Executed query", extra={"query": query})
             return results
         except sqlite3.Error as e:
-            logger.error(f"Failed to execute query: {e}")
+            logger.error("Failed to execute query", extra={"error": e})
             raise
 
     def db_connection(self):

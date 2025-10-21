@@ -32,7 +32,7 @@ class WalkhighlandsAPI:
         hill_data = ScraperAPI.fetch_data(hill_url)
         content = hill_data.get("content", "")
         if not content:
-            logger.error(f"No content fetched from the hill page: {hill_url}")
+            logger.error("No content fetched from the hill page", extra={"hill_url": hill_url})
             return []
         return WalkhighlandsService.parse_walks_for_hill(content)
 
@@ -42,7 +42,7 @@ class WalkhighlandsAPI:
         walk_data = ScraperAPI.fetch_data(walk_url)
         content = walk_data.get("content", "")
         if not content:
-            logger.error(f"No content fetched from the walk page: {walk_url}")
+            logger.error("No content fetched from the walk page", extra={"walk_url": walk_url})
             return None
         return WalkhighlandsService.parse_walk_data(content, walk_url)
 
