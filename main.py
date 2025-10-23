@@ -113,7 +113,7 @@ def main():
     walk_directions_for_user_parser = subparsers.add_parser(
         "walk-directions", help="Get walking directions for a user to a walk"
     )
-    walk_directions_for_user_parser.add_argument("--user", type=str, help="User's name")
+    walk_directions_for_user_parser.add_argument("--user", type=str, required=True, help="User's name")
 
     args = parser.parse_args()
 
