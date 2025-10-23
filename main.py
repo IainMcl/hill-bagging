@@ -93,8 +93,8 @@ def main():
         help="Specify which tables to reset.",
     )
     user_parser = subparsers.add_parser("add-user", help="Add a new user")
-    user_parser.add_argument("--name", type=str, help="Name of the user")
-    user_parser.add_argument("--postcode", type=str, help="Postcode of the user")
+    user_parser.add_argument("--name", type=str, required=True, help="Name of the user")
+    user_parser.add_argument("--postcode", type=str, required=True, help="Postcode of the user")
     directions_parser = subparsers.add_parser(
         "directions", help="Get driving directions"
     )
