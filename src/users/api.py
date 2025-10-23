@@ -1,6 +1,6 @@
 import logging
 
-from walkhighlands.api import WalkhighlandsAPI
+from src.walkhighlands.api import WalkhighlandsAPI
 from src.users.data import UserData
 from src.users.service import UsersService
 from src.users.location_service import get_lat_lon_from_postcode
