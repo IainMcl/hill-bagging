@@ -48,7 +48,7 @@ def test_save_and_fetch_user_data(mock_db_api):
     location = LatLon(lat=56.0, lon=-4.0)
 
     UserData.save_user_data(name, location)
-    fetched_location = UserData.fetch_user_location(name)
+    _, fetched_location = UserData.fetch_user_location(name)
 
     assert fetched_location == location
 
@@ -76,3 +76,30 @@ def test_parse_lat_lon_string():
     result = UserData._parse_lat_lon_string(location_string)
 
     assert result == expected_location
+
+
+def test_save_walk_directions(mock_db_api):
+    UserData.create_user_table()
+    UserData.create_user_walk_directions_table()
+
+    user_id = 1
+    walk_id = 1
+    map_response = MagicMock()
+    map_response.distance_meters = 1000
+    map_response.duration_seconds = 3600
+
+    UserData.save_walk_directions(user_id, walk_id, map_response)
+
+    conn = mock_db_api.db_connection.return_value.__enter__.return_value
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT user_id, walk_id, distance, duration FROM user_walk_directions WHERE user_id = ? AND walk_id = ?",
+        (user_id, walk_id),
+    )
+    result = cursor.fetchone()
+
+    assert result is not None
+    assert result[0] == user_id
+    assert result[1] == walk_id
+    assert result[2] == map_response.distance_meters
+    assert result[3] == map_response.duration_seconds

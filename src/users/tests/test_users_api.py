@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import patch
 from src.users.api import UsersAPI
 from src.users.dtos import LatLon
+from src.walkhighlands.dtos import WalkStartLocationDTO
+from src.maps.dtos import MapsResponseDTO
 
 
 @patch("src.users.api.UserData")
@@ -70,7 +72,7 @@ def test_add_user_check_location_failure(
 def test_get_user_location_success(mock_user_data):
     name = "test_user"
     mock_latlon = LatLon(lat=55.9533, lon=-3.1883)
-    mock_user_data.fetch_user_location.return_value = mock_latlon
+    mock_user_data.fetch_user_location.return_value = (1, mock_latlon)
 
     result = UsersAPI.get_user_location(name)
 
@@ -86,3 +88,40 @@ def test_get_user_location_not_found(mock_user_data):
     with pytest.raises(ValueError, match="User not found"):
         UsersAPI.get_user_location(name)
     mock_user_data.fetch_user_location.assert_called_once_with(name)
+
+
+@patch("src.users.api.UsersService")
+@patch("src.users.api.MapsApi")
+@patch("src.users.api.WalkhighlandsAPI")
+@patch("src.users.api.UserData")
+def test_get_walk_directions_for_user(
+    mock_user_data, mock_walkhighlands_api, mock_maps_api, mock_users_service
+):
+    user = "test_user"
+    user_id = 1
+    user_location = LatLon(lat=55.84901, lon=-3.14373)
+    mock_user_data.fetch_user_location.return_value = (user_id, user_location)
+
+    walk_location = WalkStartLocationDTO(
+        walk_id=1, walk_start_location="56.90890,-4.23660"
+    )
+    mock_walkhighlands_api.get_walk_start_locations.return_value = [walk_location]
+
+    map_response = MapsResponseDTO(
+        origin="55.84901,-3.14373",
+        destination="56.90890,-4.23660",
+        distance_meters=179939,
+        duration_seconds=7461,
+    )
+    mock_maps_api.get_driving_distance_and_time.return_value = map_response
+
+    UsersAPI.get_walk_directions_for_user(user)
+
+    mock_user_data.fetch_user_location.assert_called_once_with(user)
+    mock_walkhighlands_api.get_walk_start_locations.assert_called_once()
+    mock_maps_api.get_driving_distance_and_time.assert_called_once_with(
+        origin="55.84901,-3.14373", destination="56.90890,-4.23660"
+    )
+    mock_users_service.save_walk_directions_for_user.assert_called_once_with(
+        user_id, walk_location.walk_id, map_response
+    )
