@@ -1,5 +1,5 @@
 from src.scraper.api import ScraperAPI
-from src.walkhighlands.dtos import HillPageData, Walk, WalkData
+from src.walkhighlands.dtos import HillPageData, Walk, WalkData, WalkStartLocationDTO
 from src.walkhighlands.service import WalkhighlandsService
 from src.walkhighlands.data.hill_data import WalkhighlandsData
 import logging
@@ -70,3 +70,8 @@ class WalkhighlandsAPI:
     def reset_database(tables: list[str] | None = None) -> None:
         """Reset the database."""
         WalkhighlandsData.reset_database(tables)
+
+    @staticmethod
+    def get_walk_start_locations() -> list[WalkStartLocationDTO]:
+        """Fetch all walk starting locations from the database."""
+        return WalkhighlandsData.get_walk_starting_locations()

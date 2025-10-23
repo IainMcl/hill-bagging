@@ -15,17 +15,18 @@ logger = logging.getLogger(__name__)
 def initialize(args):
     logger.info("Initializing with arguments", extra={"cli_args": vars(args)})
     WalkhighlandsAPI.initialize_app()
+    UsersAPI.initialize_users()
     logger.info("Initialization complete.")
 
 
 def fetch_hills_data(args):
-    logger.info("Fetching Munro data with arguments", extra={"cli_args": args})
+    logger.info("Fetching Munro data with arguments", extra={"cli_args": vars(args)})
     munros = WalkhighlandsAPI.get_munros()
     WalkhighlandsAPI.save_munros(munros)
 
 
 def fetch_walks(args):
-    logger.info("Fetching walks with arguments", extra={"cli_args": args})
+    logger.info("Fetching walks with arguments", extra={"cli_args": vars(args)})
     hill_urls = WalkhighlandsAPI.get_hill_urls()
     for hill_url in hill_urls:
         walks = WalkhighlandsAPI.get_walks_for_hill(hill_url)
@@ -40,19 +41,19 @@ def fetch_walks(args):
 
 
 def reset_database(args):
-    logger.info("Resetting database with arguments", extra={"cli_args": args})
+    logger.info("Resetting database with arguments", extra={"cli_args": vars(args)})
     WalkhighlandsAPI.reset_database(args.tables)
     logger.info("Database reset complete.")
 
 
 def add_user(args):
-    logger.info("Adding user with arguments", extra={"cli_args": args})
+    logger.info("Adding user with arguments", extra={"cli_args": vars(args)})
     UsersAPI.add_user(args.name, args.postcode)
 
 
 def get_walk_directions_for_user(args):
-    logger.info("Getting walk directions for user", extra={"cli_args": args})
-    UsersAPI.get_walk_directions_for_user(args.user_id, args.walk_id)
+    logger.info("Getting walk directions for user", extra={"cli_args": vars(args)})
+    UsersAPI.get_walk_directions_for_user(args.user)
 
 
 def directions(args):

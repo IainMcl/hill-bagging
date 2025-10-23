@@ -1,5 +1,5 @@
 from src.database.api import DatabaseAPI
-from src.walkhighlands.dtos import HillPageData, WalkData
+from src.walkhighlands.dtos import HillPageData, WalkData, WalkStartLocationDTO
 import logging
 import sqlite3
 
@@ -241,3 +241,45 @@ class WalkhighlandsData:
                 cursor.execute("DROP TABLE IF EXISTS hills")
                 WalkhighlandsData.create_hill_data_table()
             conn.commit()
+
+    @staticmethod
+    def get_walk_starting_locations() -> list[WalkStartLocationDTO]:
+        """Get walk starting locations from the database."""
+        db_api = DatabaseAPI()
+        walk_start_locations: list[WalkStartLocationDTO] = []
+        with db_api.db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, start_location FROM walks WHERE start_location IS NOT NULL
+                """
+            )
+            results = cursor.fetchall()
+            for row in results:
+                walk_id = row[0]
+                start_location_url = row[1]
+                lat_lon_string = (
+                    WalkhighlandsData._parse_start_location_url_to_lat_lon_string(
+                        start_location_url
+                    )
+                )
+                walk_start_locations.append(
+                    WalkStartLocationDTO(
+                        walk_id=walk_id, walk_start_location=lat_lon_string
+                    )
+                )
+        return walk_start_locations
+
+    @staticmethod
+    def _parse_start_location_url_to_lat_lon_string(url: str) -> str:
+        """
+        Parse the start location URL to a lat lon string.
+
+        Input string of the form:
+        https://www.google.com/maps/search/56.90890,-4.23660/
+
+        Returns a string of the form "56.90890,-4.23660"
+        """
+        parts = url.split("/search/")[1].split("/")
+        lat_lon = parts[0]
+        return lat_lon

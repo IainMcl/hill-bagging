@@ -25,3 +25,8 @@ class WalkData(BaseModel):
 class Walk(BaseModel):
     title: str
     url: str
+
+
+class WalkStartLocationDTO(BaseModel):
+    walk_id: int
+    walk_start_location: str

@@ -15,6 +15,14 @@ class MapsApi:
         result = maps_service.get_directions(
             origin=origin, destination=destination, mode="driving"
         )
+        logger.debug(
+            "Retrieved driving directions",
+            extra={
+                "origin": origin,
+                "destination": destination,
+                "result": result.model_dump() if result else "None",
+            },
+        )
         if result is None:
             logger.error(
                 "Failed to get driving directions",
