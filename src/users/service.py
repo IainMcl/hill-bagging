@@ -4,6 +4,7 @@ import logging
 from src.maps.dtos import MapsResponseDTO
 from src.users.data import UserData
 from src.users.dtos import LatLon, UserWalkTravelInfo
+from src.utils import distance, time
 
 logger = logging.getLogger(__name__)
 
@@ -58,29 +59,28 @@ class UsersService:
             print(f"Walk Name: {walk.walk_info.walk_name}")
             print(f"URL: {walk.walk_info.walk_url}")
             print(f"Start Location: {walk.walk_info.walk_start_location}")
-            print(f"Distance: {walk.walk_info.walk_distance_meters / 1000:.2f} km")
+            print(
+                f"Distance: {distance.meters_to_kilometers(walk.walk_info.walk_distance_meters):.2f} km"
+            )
             print(f"Ascent: {walk.walk_info.walk_ascent_meters} m")
             print(
                 "Duration: "
-                f"{walk.walk_info.walk_duration_seconds // 3600}h "
-                f"{(walk.walk_info.walk_duration_seconds % 3600) // 60}m"
+                f"{time.user_display_time_hours(time_seconds=walk.walk_info.walk_duration_seconds)}"
             )
             print(f"Number of Hills: {walk.walk_info.number_of_hills}")
             print(f"Hills: {', '.join(walk.walk_info.hills)}")
             print("--------------------------------------------------")
             print("Travel Information:")
             print(
-                f"  Travel Time: {walk.travel_info.duration_seconds // 3600}h "
-                f"{(walk.travel_info.duration_seconds % 3600) // 60}m"
+                f"  Travel Time: {time.user_display_time_hours(time_seconds=walk.travel_info.duration_seconds)}"
             )
             print(
-                f"  Travel Distance: {walk.travel_info.distance_meters / 1000:.2f} km"
+                f"  Travel Distance: {distance.meters_to_kilometers(walk.travel_info.distance_meters):.2f} km"
             )
             print("--------------------------------------------------")
             print("Total Trip Information:")
             if walk.total_time_seconds is not None:
                 print(
-                    f"  Total Time: {walk.total_time_seconds // 3600}h "
-                    f"{(walk.total_time_seconds % 3600) // 60}m"
+                    f"  Total Time: {time.user_display_time_hours(time_seconds=walk.total_time_seconds)}"
                 )
             print("==================================================")
