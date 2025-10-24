@@ -69,19 +69,5 @@ def test_display_user_walk_travel_info(mock_print):
         "  Total Time: 6h 0m",
         "==================================================",
     ]
-    mock_print.assert_any_call(expected_calls[0])
-    mock_print.assert_any_call(expected_calls[1])
-    mock_print.assert_any_call(expected_calls[2])
-    mock_print.assert_any_call(expected_calls[3])
-    mock_print.assert_any_call(expected_calls[4])
-    mock_print.assert_any_call(expected_calls[5])
-    mock_print.assert_any_call(expected_calls[6])
-    mock_print.assert_any_call(expected_calls[7])
-    mock_print.assert_any_call(expected_calls[8])
-    mock_print.assert_any_call(expected_calls[9])
-    mock_print.assert_any_call(expected_calls[10])
-    mock_print.assert_any_call(expected_calls[11])
-    mock_print.assert_any_call(expected_calls[12])
-    mock_print.assert_any_call(expected_calls[13])
-    mock_print.assert_any_call(expected_calls[14])
-    mock_print.assert_any_call(expected_calls[15])
+    for call in expected_calls:
+        mock_print.assert_any_call(call)
