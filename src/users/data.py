@@ -2,7 +2,9 @@ from src.database.api import DatabaseAPI
 import sqlite3
 import logging
 from src.maps.dtos import MapsResponseDTO
-from src.users.dtos import LatLon
+from src.users.dtos import LatLon, TravelInfo, UserWalkTravelInfo, WalkInfo
+from src.utils.distance import kilometers_to_meters
+from src.utils.time import hours_to_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -163,3 +165,114 @@ class UserData:
                 extra={"user_id": user_id, "walk_id": walk_id},
             )
             return False
+
+    @staticmethod
+    def get_user_id_for_name(user_name: str) -> int | None:
+        """Get the user ID for a given user name."""
+        db_api = DatabaseAPI()
+        try:
+            with db_api.db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT id FROM users WHERE name = ?
+                    """,
+                    (user_name,),
+                )
+                result = cursor.fetchone()
+                return result[0] if result else None
+        except sqlite3.Error:
+            logger.exception(
+                "An error occurred while fetching user ID",
+                extra={"user_name": user_name},
+            )
+            return None
+
+    @staticmethod
+    def get_user_walks_travel_info(user_id: int) -> list[UserWalkTravelInfo]:
+        """
+        Get the information for all user walks including walk details and travel info.
+        """
+        db_api = DatabaseAPI()
+        try:
+            with db_api.db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT
+                        w.id as walk_id,
+                        w.title as walk_title,
+                        w.start_location as walk_start_location,
+                        w.ascent as walk_ascent_meters,
+                        w.distance as walk_distance_km,
+                        w.time as walk_duration_hours,
+                        w.url as walk_url,
+                        uwd.distance as travel_distance_meters,
+                        uwd.duration as travel_duration_seconds,
+                        GROUP_CONCAT(h.name) as hill_names
+                    FROM
+                        user_walk_directions uwd
+                    JOIN
+                        walks w ON uwd.walk_id = w.id
+                    LEFT JOIN
+                        walk_hill_decomposition whd ON w.id = whd.walk_id
+                    LEFT JOIN
+                        hills h ON whd.hill_id = h.id
+                    WHERE
+                        uwd.user_id = ?
+                    GROUP BY
+                        w.id
+                    ORDER BY
+                        w.id
+                    """,
+                    (user_id,),
+                )
+                results = cursor.fetchall()
+
+                user_walks_info = []
+                for row in results:
+                    (
+                        walk_id,
+                        walk_title,
+                        walk_start_location,
+                        walk_ascent_meters,
+                        walk_distance_km,
+                        walk_duration_hours,
+                        walk_url,
+                        travel_distance_meters,
+                        travel_duration_seconds,
+                        hill_names,
+                    ) = row
+                    hills = hill_names.split(",") if hill_names else []
+                    walk_info = WalkInfo(
+                        walk_id=walk_id,
+                        walk_name=walk_title,
+                        walk_start_location=walk_start_location,
+                        walk_ascent_meters=walk_ascent_meters,
+                        walk_distance_meters=kilometers_to_meters(walk_distance_km),
+                        walk_duration_seconds=hours_to_seconds(
+                            float(walk_duration_hours)
+                        ),
+                        walk_url=walk_url,
+                        number_of_hills=len(hills),
+                        hills=hills,
+                    )
+                    travel_info = TravelInfo(
+                        distance_meters=travel_distance_meters,
+                        duration_seconds=travel_duration_seconds,
+                    )
+                    user_walks_info.append(
+                        UserWalkTravelInfo(
+                            user_id=user_id,
+                            walk_info=walk_info,
+                            travel_info=travel_info,
+                        )
+                    )
+                return user_walks_info
+
+        except sqlite3.Error:
+            logger.exception(
+                "An error occurred while fetching user walks travel info",
+                extra={"user_id": user_id},
+            )
+            return []

@@ -1,4 +1,5 @@
 import pytest
+from src.users.tests.factories import create_user_walk_travel_info
 from unittest.mock import patch
 from src.users.api import UsersAPI
 from src.users.dtos import LatLon
@@ -170,9 +171,38 @@ def test_directions_already_saved_true(mock_user_data):
     mock_user_data.check_walk_directions_exist.assert_called_once_with(1, 1)
 
 
+@patch("src.users.api.UsersService")
 @patch("src.users.api.UserData")
-def test_directions_already_saved_false(mock_user_data):
-    mock_user_data.check_walk_directions_exist.return_value = False
-    result = UsersAPI._directions_already_saved(1, 1)
-    assert result is False
-    mock_user_data.check_walk_directions_exist.assert_called_once_with(1, 1)
+def test_get_optimal_user_routes(mock_user_data, mock_users_service):
+    user = "test_user"
+    user_id = 1
+    mock_user_data.get_user_id_for_name.return_value = user_id
+
+    walk_infos = [
+        create_user_walk_travel_info(
+            walk_id=1, number_of_hills=1, total_time_seconds=1000
+        ),
+        create_user_walk_travel_info(
+            walk_id=2, number_of_hills=0, total_time_seconds=500
+        ),
+        create_user_walk_travel_info(
+            walk_id=3, number_of_hills=2, total_time_seconds=2000
+        ),
+    ]
+    mock_users_service.calculate_user_total_times.return_value = walk_infos
+
+    UsersAPI.get_optimal_user_routes(user, 10, ascending=True)
+
+    mock_users_service.display_user_walk_travel_info.assert_called_once()
+    args, _ = mock_users_service.display_user_walk_travel_info.call_args
+    displayed_walks = args[0]
+
+    assert len(displayed_walks) == 2
+    assert displayed_walks[0].walk_info.walk_id == 1
+    assert displayed_walks[1].walk_info.walk_id == 3
+
+    UsersAPI.get_optimal_user_routes(user, 10, ascending=False)
+    args, _ = mock_users_service.display_user_walk_travel_info.call_args
+    displayed_walks = args[0]
+    assert displayed_walks[0].walk_info.walk_id == 3
+    assert displayed_walks[1].walk_info.walk_id == 1

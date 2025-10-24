@@ -91,3 +91,24 @@ class UsersAPI:
     @staticmethod
     def _directions_already_saved(user_id: int, walk_id: int) -> bool:
         return UserData.check_walk_directions_exist(user_id, walk_id)
+
+    @staticmethod
+    def get_optimal_user_routes(
+        user: str, number_of_routes: int, ascending: bool = True
+    ) -> None:
+        """
+        Get the total time for each walk and travel.
+        Order the walks by total time.
+        """
+        user_id = UserData.get_user_id_for_name(user)
+        if user_id is None:
+            logger.error("User not found", extra={"user": user})
+            raise ValueError("User not found")
+        walk_travel_infos = UsersService.calculate_user_total_times(user_id)
+        walk_travel_infos = [
+            walk for walk in walk_travel_infos if walk.walk_info.number_of_hills >= 1
+        ]
+        walk_travel_infos.sort(
+            key=lambda x: x.total_time_seconds or float("inf"), reverse=not ascending
+        )
+        UsersService.display_user_walk_travel_info(walk_travel_infos[:number_of_routes])

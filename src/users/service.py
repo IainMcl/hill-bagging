@@ -1,7 +1,10 @@
 import logging
-from src.users.dtos import LatLon
+
+# from src.users.dtos import LatLon, UserTotalWalkTravel, UserWalkTimes
 from src.maps.dtos import MapsResponseDTO
 from src.users.data import UserData
+from src.users.dtos import LatLon, UserWalkTravelInfo
+from src.utils import distance, time
 
 logger = logging.getLogger(__name__)
 
@@ -28,3 +31,56 @@ class UsersService:
         Save the walking directions for a user to a specific walk.
         """
         UserData.save_walk_directions(user_id, walk_id, map_response)
+
+    @staticmethod
+    def calculate_user_total_times(user_id: int) -> list[UserWalkTravelInfo]:
+        """
+        Calculate the total time for each walk for a user by summing the
+        walk duration with twice the travel time (their and back).
+        """
+        walk_travel_infos = UserData.get_user_walks_travel_info(user_id)
+        for walk in walk_travel_infos:
+            total_time = (
+                walk.walk_info.walk_duration_seconds
+                + 2 * walk.travel_info.duration_seconds
+            )
+            walk.total_time_seconds = total_time
+        return walk_travel_infos
+
+    @staticmethod
+    def display_user_walk_travel_info(
+        walk_travel_infos: list[UserWalkTravelInfo],
+    ) -> None:
+        """
+        Display the user's walk and travel information in a user-friendly format.
+        """
+        for walk in walk_travel_infos:
+            print("==================================================")
+            print(f"Walk Name: {walk.walk_info.walk_name}")
+            print(f"URL: {walk.walk_info.walk_url}")
+            print(f"Start Location: {walk.walk_info.walk_start_location}")
+            print(
+                f"Distance: {distance.meters_to_kilometers(walk.walk_info.walk_distance_meters):.2f} km"
+            )
+            print(f"Ascent: {walk.walk_info.walk_ascent_meters} m")
+            print(
+                "Duration: "
+                f"{time.user_display_time_hours(time_seconds=walk.walk_info.walk_duration_seconds)}"
+            )
+            print(f"Number of Hills: {walk.walk_info.number_of_hills}")
+            print(f"Hills: {', '.join(walk.walk_info.hills)}")
+            print("--------------------------------------------------")
+            print("Travel Information:")
+            print(
+                f"  Travel Time: {time.user_display_time_hours(time_seconds=walk.travel_info.duration_seconds)}"
+            )
+            print(
+                f"  Travel Distance: {distance.meters_to_kilometers(walk.travel_info.distance_meters):.2f} km"
+            )
+            print("--------------------------------------------------")
+            print("Total Trip Information:")
+            if walk.total_time_seconds is not None:
+                print(
+                    f"  Total Time: {time.user_display_time_hours(time_seconds=walk.total_time_seconds)}"
+                )
+            print("==================================================")

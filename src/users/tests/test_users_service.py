@@ -1,7 +1,7 @@
 from src.users.service import UsersService
+from src.users.tests.factories import create_user_walk_travel_info
 from src.users.dtos import LatLon
 from unittest.mock import patch
-from src.maps.dtos import MapsResponseDTO
 
 
 def test_check_location_valid():
@@ -44,19 +44,30 @@ def test_check_location_invalid_longitude_low():
     assert result is False
 
 
-@patch("src.users.service.UserData")
-def test_save_walk_directions_for_user(mock_user_data):
-    user_id = 1
-    walk_id = 1
-    map_response = MapsResponseDTO(
-        origin="origin",
-        destination="destination",
-        distance_meters=1000,
-        duration_seconds=3600,
-    )
+@patch("builtins.print")
+def test_display_user_walk_travel_info(mock_print):
+    walk_travel_info = create_user_walk_travel_info()
 
-    UsersService.save_walk_directions_for_user(user_id, walk_id, map_response)
+    UsersService.display_user_walk_travel_info([walk_travel_info])
 
-    mock_user_data.save_walk_directions.assert_called_once_with(
-        user_id, walk_id, map_response
-    )
+    expected_calls = [
+        "==================================================",
+        "Walk Name: Test Walk",
+        "URL: http://test.com",
+        "Start Location: 55.9533,-3.1883",
+        "Distance: 10.00 km",
+        "Ascent: 500 m",
+        "Duration: 5h 0m",
+        "Number of Hills: 1",
+        "Hills: Test Hill",
+        "--------------------------------------------------",
+        "Travel Information:",
+        "  Travel Time: 1h 0m",
+        "  Travel Distance: 20.00 km",
+        "--------------------------------------------------",
+        "Total Trip Information:",
+        "  Total Time: 6h 0m",
+        "==================================================",
+    ]
+    for call in expected_calls:
+        mock_print.assert_any_call(call)

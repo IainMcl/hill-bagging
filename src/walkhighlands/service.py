@@ -12,10 +12,10 @@ class WalkhighlandsService:
     BASE_URL = "https://www.walkhighlands.co.uk"
 
     @classmethod
-    def parse_munro_table_data(cls, bs_content: str) -> list[HillPageData]:
+    def parse_munro_table_data(cls, content: str) -> list[HillPageData]:
         """Parse HTML data to extract Munro table information."""
-
-        munro_tables = bs_content.find_all("table", {"class": "table1"})  # type: ignore
+        bs_content = BeautifulSoup(content, "html.parser")
+        munro_tables = bs_content.find_all("table", {"class": "table1"})
 
         if not munro_tables:
             logger.warning("Munro tables not found in the provided HTML data.")
@@ -24,14 +24,12 @@ class WalkhighlandsService:
         mountain_data = []
 
         for munro_table in munro_tables:
-            # Now, call find_all("tbody") on the SINGLE, current table (munro_table)
             bodys = munro_table.find_all("tbody")
 
             if not bodys:
                 logger.warning("No table body found in a Munro table.")
                 continue
 
-            # 3. Continue your original iteration logic
             for table_body in bodys:
                 rows = table_body.find_all("tr")
                 for row in rows:
@@ -40,7 +38,6 @@ class WalkhighlandsService:
                     if len(columns) == 3:
                         anchor_tag = columns[0].find("a")
 
-                        # Check if an anchor tag exists
                         if not anchor_tag:
                             logger.warning(
                                 "Mountain anchor tag not found for a row; skipping."
@@ -49,9 +46,7 @@ class WalkhighlandsService:
 
                         relative_url = anchor_tag.get("href")
 
-                        if relative_url:
-                            # Prepend the base URL to create the full, absolute URL
-                            # Assuming BASE_URL is accessible here, e.g., WalkhighlandsService.BASE_URL
+                        if relative_url and isinstance(relative_url, str):
                             mountain_url = f"{cls.BASE_URL}/munros/{relative_url}"
                         else:
                             logger.warning(
@@ -101,47 +96,37 @@ class WalkhighlandsService:
             return None
 
     @classmethod
-    def parse_walks_for_hill(cls, bs_content: str) -> list[Walk]:
+    def parse_walks_for_hill(cls, content: str) -> list[Walk]:
         """Parse HTML content to extract walk URLs associated with a specific hill."""
-        # 1. Find the target header element
-        target_header: Tag | None = bs_content.find(  # type: ignore[arg-type]
-            lambda tag: tag.name in ["h2", "h3"]  # type: ignore[arg-type]
+        bs_content = BeautifulSoup(content, "html.parser")
+        target_header = bs_content.find(
+            lambda tag: isinstance(tag, Tag)
+            and tag.name in ["h2", "h3"]
             and "Detailed route description and map" in tag.get_text(strip=True)
         )
 
         if not target_header:
-            # The header wasn't found
             return []
 
         walk_links = []
         for sibling in target_header.find_next_siblings():
-            # Stop if we hit the next major section header
             if sibling.name in ["h2", "h3", "div"]:
                 break
 
-            # Check if the sibling is the <p> tag that contains the link
-            if sibling.name == "p":
-                # 3. Search INSIDE the <p> tag for the nested <a> tag
-                link_tag: Tag | None = sibling.find("a")
+            if isinstance(sibling, Tag) and sibling.name == "p":
+                link_tag = sibling.find("a")
 
                 if link_tag and "href" in link_tag.attrs:
                     relative_url = link_tag["href"]
+                    if isinstance(relative_url, str):
+                        full_url = (
+                            f"{cls.BASE_URL}{relative_url}"
+                            if relative_url.startswith("/")
+                            else relative_url
+                        )
 
-                    # 4. Construct the absolute URL
-                    full_url = (
-                        f"{cls.BASE_URL}{relative_url}"
-                        if relative_url.startswith("/")
-                        else relative_url
-                    )
-
-                    title = link_tag.get_text(strip=True) or "Walk Link"
-                    walk_links.append(Walk(title=title, url=str(full_url)))
-
-            # NOTE: A more robust parser might also check for the next section header
-            # (e.g., 'Other routes and challenges') to stop the search, but
-            # find_next_siblings('a') should generally stop once the next non-anchor
-            # sibling appears, which is often sufficient on this site.
-
+                        title = link_tag.get_text(strip=True) or "Walk Link"
+                        walk_links.append(Walk(title=title, url=str(full_url)))
         return walk_links
 
     @classmethod
@@ -179,20 +164,21 @@ class WalkhighlandsService:
         return hill_ids
 
     @classmethod
-    def parse_walk_data(cls, bs_content: str, walk_url: str) -> WalkData | None:
+    def parse_walk_data(cls, content: str, walk_url: str) -> WalkData | None:
         """Parse HTML content to extract detailed walk data."""
+        bs_content = BeautifulSoup(content, "html.parser")
         # Implementation would go here
         title_tag = bs_content.find("h1")
-        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"  # type: ignore
+        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"
 
         # Locate the container that holds all the statistics
-        stats_header = bs_content.find(  # type: ignore
+        stats_header = bs_content.find(
             "h2", string=re.compile(r"\bWalk Statistics\b", re.IGNORECASE)
         )
         if not stats_header:
             logger.warning("Walk statistics header not found.")
             return None
-        stats_container = stats_header.find_next_sibling("dl")  # type: ignore
+        stats_container = stats_header.find_next_sibling("dl")
         if not stats_container:
             logger.warning("Walk statistics container not found.")
             return None
@@ -205,7 +191,7 @@ class WalkhighlandsService:
             )
             if not label_tag:
                 return ""
-            value = label_tag.find_next_sibling("dd")  # type: ignore
+            value = label_tag.find_next_sibling("dd")
             return value.get_text(strip=True) if value else ""
 
         distance_str = get_stat_value("Distance")
@@ -214,17 +200,17 @@ class WalkhighlandsService:
         grid_ref_str = get_stat_value("Start Grid Ref")
 
         # --- 2. Grade and Bog Factor (Count icons) ---
-        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))  # type: ignore
+        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))
         bog_factor_int = len(
-            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))  # type: ignore
+            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))
         )
 
         # --- 3. User Rating (Extract value before /5) ---
-        rating_tag = bs_content.find("strong", string="Rating")  # type: ignore
+        rating_tag = bs_content.find("strong", string="Rating")
         rating_value = 0.0
-        if rating_tag and rating_tag.next_sibling:  # type: ignore[attr-defined]
+        if rating_tag and rating_tag.next_sibling:
             try:
-                rating_text = rating_tag.next_sibling.strip().split("/")[0]  # type: ignore[attr-defined]
+                rating_text = rating_tag.next_sibling.strip().split("/")[0]
                 rating_value = float(rating_text)
             except Exception:
                 pass
@@ -259,12 +245,12 @@ class WalkhighlandsService:
         # --- 6. Start Location ---
         # Find string 'open in google maps'
         start_location = ""
-        maps_link = bs_content.find(  # type: ignore[call-arg]
+        maps_link = bs_content.find(
             "a",
             string=re.compile(r"\bopen in google maps\b", re.IGNORECASE),
         )
-        if maps_link:  # type: ignore[attr-defined]
-            start_location = maps_link.get("href", "")  # type: ignore[attr-defined]
+        if maps_link:
+            start_location = maps_link.get("href", "")
 
         try:
             walk_data_model = WalkData(

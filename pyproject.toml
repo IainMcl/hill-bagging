@@ -22,3 +22,6 @@ dev = [
     "pytest-mock>=3.14.0",
     "ruff>=0.1.0",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true

@@ -27,8 +27,7 @@ class TestWalkhighlandsService:
     def test_parse_munro_table_data_success(self):
         with open("src/walkhighlands/tests/test_data/munro_table.html", "r") as f:
             html_content = f.read()
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_munro_table_data(bs_content)
+        result = WalkhighlandsService.parse_munro_table_data(html_content)
 
         expected = [
             HillPageData(
@@ -49,33 +48,28 @@ class TestWalkhighlandsService:
         ]
 
     def test_parse_munro_table_data_empty_html(self):
-        bs_content = BeautifulSoup("", "html.parser")
-        result = WalkhighlandsService.parse_munro_table_data(bs_content)
+        result = WalkhighlandsService.parse_munro_table_data("")
         assert result == []
 
     def test_parse_munro_table_data_no_munro_tables(self):
         html_content = "<html><body><p>No tables here</p></body></html>"
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_munro_table_data(bs_content)
+        result = WalkhighlandsService.parse_munro_table_data(html_content)
         assert result == []
 
     def test_parse_munro_table_data_no_tbody(self):
         html_content = '<html><body><table class="table1"><thead><tr><th>Header</th></tr></thead></table></body></html>'
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_munro_table_data(bs_content)
+        result = WalkhighlandsService.parse_munro_table_data(html_content)
         assert result == []
 
     def test_parse_munro_table_data_no_anchor_tag(self):
         html_content = '<html><body><table class="table1"><tbody><tr><td>No Link</td><td>Region</td><td>1000m</td></tr></tbody></table></body></html>'
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_munro_table_data(bs_content)
+        result = WalkhighlandsService.parse_munro_table_data(html_content)
         assert result == []
 
     def test_parse_walks_for_hill_success(self):
         with open("src/walkhighlands/tests/test_data/hill_page_walks.html", "r") as f:
             html_content = f.read()
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_walks_for_hill(bs_content)
+        result = WalkhighlandsService.parse_walks_for_hill(html_content)
 
         expected = [
             Walk(
@@ -91,14 +85,12 @@ class TestWalkhighlandsService:
 
     def test_parse_walks_for_hill_no_target_header(self):
         html_content = "<html><body><p>Some content</p></body></html>"
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_walks_for_hill(bs_content)
+        result = WalkhighlandsService.parse_walks_for_hill(html_content)
         assert result == []
 
     def test_parse_walks_for_hill_no_walk_links(self):
         html_content = "<html><body><h2>Detailed route description and map</h2><p>No links here</p></body></html>"
-        bs_content = BeautifulSoup(html_content, "html.parser")
-        result = WalkhighlandsService.parse_walks_for_hill(bs_content)
+        result = WalkhighlandsService.parse_walks_for_hill(html_content)
         assert result == []
 
     @patch("walkhighlands.service.WalkhighlandsData.get_hill_id_by_url")
@@ -145,9 +137,8 @@ class TestWalkhighlandsService:
         mock_get_hill_ids.return_value = [1]
         with open("src/walkhighlands/tests/test_data/walk_data_page.html", "r") as f:
             html_content = f.read()
-        bs_content = BeautifulSoup(html_content, "html.parser")
         walk_url = "https://www.walkhighlands.co.uk/fort-william/ben-nevis.shtml"
-        result = WalkhighlandsService.parse_walk_data(bs_content, walk_url)
+        result = WalkhighlandsService.parse_walk_data(html_content, walk_url)
 
         expected = WalkData(
             title="Ben Nevis via the Mountain Track",
@@ -167,17 +158,15 @@ class TestWalkhighlandsService:
     @patch("walkhighlands.service.WalkhighlandsService._get_hill_ids")
     def test_parse_walk_data_no_walk_statistics_header(self, mock_get_hill_ids):
         html_content = "<html><body><h1>Title</h1><p>No stats</p></body></html>"
-        bs_content = BeautifulSoup(html_content, "html.parser")
         walk_url = "https://www.walkhighlands.co.uk/fort-william/ben-nevis.shtml"
-        result = WalkhighlandsService.parse_walk_data(bs_content, walk_url)
+        result = WalkhighlandsService.parse_walk_data(html_content, walk_url)
         assert result is None
 
     @patch("walkhighlands.service.WalkhighlandsService._get_hill_ids")
     def test_parse_walk_data_no_walk_statistics_container(self, mock_get_hill_ids):
         html_content = "<html><body><h1>Title</h1><h2>Walk Statistics</h2><p>No container</p></body></html>"
-        bs_content = BeautifulSoup(html_content, "html.parser")
         walk_url = "https://www.walkhighlands.co.uk/fort-william/ben-nevis.shtml"
-        result = WalkhighlandsService.parse_walk_data(bs_content, walk_url)
+        result = WalkhighlandsService.parse_walk_data(html_content, walk_url)
         assert result is None
 
     @patch("walkhighlands.service.WalkhighlandsService._get_hill_ids")
@@ -186,9 +175,8 @@ class TestWalkhighlandsService:
         html_content = (
             "<html><body><h1>Title</h1><h2>Walk Statistics</h2><dl></dl></body></html>"
         )
-        bs_content = BeautifulSoup(html_content, "html.parser")
         walk_url = "https://www.walkhighlands.co.uk/fort-william/ben-nevis.shtml"
-        result = WalkhighlandsService.parse_walk_data(bs_content, walk_url)
+        result = WalkhighlandsService.parse_walk_data(html_content, walk_url)
 
         expected = WalkData(
             title="Title",
