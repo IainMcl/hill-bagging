@@ -1,5 +1,5 @@
 from src.database.api import DatabaseAPI
-from src.walkhighlands.dtos import HillPageData, WalkData
+from src.walkhighlands.dtos import HillPageData, WalkData, WalkStartLocationDTO
 import logging
 import sqlite3
 
@@ -83,17 +83,23 @@ class WalkhighlandsData:
                 walk_id = cursor.lastrowid
                 logger.debug("Inserted walk.", extra={"walk_id": walk_id})
                 for hill_id in walk_data.hill_ids:
-                    logger.debug(
-                        "Inserting into walk_hill_decomposition",
-                        extra={"hill_id": hill_id, "walk_id": walk_id},
-                    )
-                    cursor.execute(
-                        """
-                        INSERT INTO walk_hill_decomposition (hill_id, walk_id)
-                        VALUES (?, ?)
-                        """,
-                        (hill_id, walk_id),
-                    )
+                    try:
+                        logger.debug(
+                            "Inserting into walk_hill_decomposition",
+                            extra={"hill_id": hill_id, "walk_id": walk_id},
+                        )
+                        cursor.execute(
+                            """
+                            INSERT INTO walk_hill_decomposition (hill_id, walk_id)
+                            VALUES (?, ?)
+                            """,
+                            (hill_id, walk_id),
+                        )
+                    except sqlite3.IntegrityError:
+                        logger.warning(
+                            "Duplicate entry for walk_hill_decomposition.",
+                            extra={"hill_id": hill_id, "walk_id": walk_id},
+                        )
                 conn.commit()
             logger.debug(
                 "Inserted walk data into the database.",
@@ -149,7 +155,8 @@ class WalkhighlandsData:
                     hill_id INTEGER NOT NULL,
                     walk_id INTEGER NOT NULL,
                     FOREIGN KEY (hill_id) REFERENCES hills(id),
-                    FOREIGN KEY (walk_id) REFERENCES walks(id)
+                    FOREIGN KEY (walk_id) REFERENCES walks(id),
+                    UNIQUE(hill_id, walk_id)
                 )
                 """
             )
@@ -241,3 +248,45 @@ class WalkhighlandsData:
                 cursor.execute("DROP TABLE IF EXISTS hills")
                 WalkhighlandsData.create_hill_data_table()
             conn.commit()
+
+    @staticmethod
+    def get_walk_starting_locations() -> list[WalkStartLocationDTO]:
+        """Get walk starting locations from the database."""
+        db_api = DatabaseAPI()
+        walk_start_locations: list[WalkStartLocationDTO] = []
+        with db_api.db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, start_location FROM walks WHERE start_location IS NOT NULL
+                """
+            )
+            results = cursor.fetchall()
+            for row in results:
+                walk_id = row[0]
+                start_location_url = row[1]
+                lat_lon_string = (
+                    WalkhighlandsData._parse_start_location_url_to_lat_lon_string(
+                        start_location_url
+                    )
+                )
+                walk_start_locations.append(
+                    WalkStartLocationDTO(
+                        walk_id=walk_id, walk_start_location=lat_lon_string
+                    )
+                )
+        return walk_start_locations
+
+    @staticmethod
+    def _parse_start_location_url_to_lat_lon_string(url: str) -> str:
+        """
+        Parse the start location URL to a lat lon string.
+
+        Input string of the form:
+        https://www.google.com/maps/search/56.90890,-4.23660/
+
+        Returns a string of the form "56.90890,-4.23660"
+        """
+        parts = url.split("/search/")[1].split("/")
+        lat_lon = parts[0]
+        return lat_lon
