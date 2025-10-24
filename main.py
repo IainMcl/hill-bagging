@@ -2,7 +2,6 @@ from src.walkhighlands.api import WalkhighlandsAPI
 from src.users.service import UsersService
 from src.exporter.csv_exporter import CsvExporter
 from src.users.data import UserData
-
 from src.users.api import UsersAPI
 import argparse
 import sys
