@@ -63,6 +63,11 @@ def directions(args):
     logger.info("Directions fetched", extra={"directions": dirs.model_dump()})
 
 
+def get_optimal_user_routes(args):
+    logger.info("Getting optimal routes for user", extra={"cli_args": vars(args)})
+    UsersAPI.get_optimal_user_routes(args.users, args.number_of_routes, args.ascending)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Walkhighlands CLI Tool",
@@ -77,6 +82,7 @@ def main():
         add-user: Add a new user.
         directions: test to get driving directions
         walk-directions: Get walking directions for a user to a walk.
+        optimal-routes: Get optimal routes for user walk.
     """,
     )
 
@@ -118,6 +124,23 @@ def main():
     walk_directions_for_user_parser.add_argument(
         "--user", type=str, required=True, help="User's name"
     )
+    optimal_routes_parser = subparsers.add_parser(
+        "optimal-routes", help="Get optimal routes for user walks"
+    )
+    optimal_routes_parser.add_argument(
+        "--users", type=str, required=True, help="User's name"
+    )
+    optimal_routes_parser.add_argument(
+        "--number_of_routes",
+        type=int,
+        default=10,
+        help="Number of optimal routes to retrieve",
+    )
+    optimal_routes_parser.add_argument(
+        "--ascending",
+        action="store_true",
+        help="Sort routes in ascending total duration order",
+    )
 
     args = parser.parse_args()
 
@@ -136,6 +159,8 @@ def main():
             directions(args)
         case "walk-directions":
             get_walk_directions_for_user(args)
+        case "optimal-routes":
+            get_optimal_user_routes(args)
         case _:
             logger.error("Unknown command")
             sys.exit(1)

@@ -179,20 +179,21 @@ class WalkhighlandsService:
         return hill_ids
 
     @classmethod
-    def parse_walk_data(cls, bs_content: str, walk_url: str) -> WalkData | None:
+    def parse_walk_data(cls, content: str, walk_url: str) -> WalkData | None:
         """Parse HTML content to extract detailed walk data."""
+        bs_content = BeautifulSoup(content, "html.parser")
         # Implementation would go here
         title_tag = bs_content.find("h1")
-        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"  # type: ignore
+        title = title_tag.get_text(strip=True) if title_tag else "Unknown Walk"
 
         # Locate the container that holds all the statistics
-        stats_header = bs_content.find(  # type: ignore
+        stats_header = bs_content.find(
             "h2", string=re.compile(r"\bWalk Statistics\b", re.IGNORECASE)
         )
         if not stats_header:
             logger.warning("Walk statistics header not found.")
             return None
-        stats_container = stats_header.find_next_sibling("dl")  # type: ignore
+        stats_container = stats_header.find_next_sibling("dl")
         if not stats_container:
             logger.warning("Walk statistics container not found.")
             return None
@@ -205,7 +206,7 @@ class WalkhighlandsService:
             )
             if not label_tag:
                 return ""
-            value = label_tag.find_next_sibling("dd")  # type: ignore
+            value = label_tag.find_next_sibling("dd")
             return value.get_text(strip=True) if value else ""
 
         distance_str = get_stat_value("Distance")
@@ -214,17 +215,17 @@ class WalkhighlandsService:
         grid_ref_str = get_stat_value("Start Grid Ref")
 
         # --- 2. Grade and Bog Factor (Count icons) ---
-        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))  # type: ignore
+        grade_int = len(bs_content.find_all("div", class_=re.compile(r"\bgrade\b")))
         bog_factor_int = len(
-            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))  # type: ignore
+            bs_content.find_all("div", class_=re.compile(r"\bbog\sfactor\b"))
         )
 
         # --- 3. User Rating (Extract value before /5) ---
-        rating_tag = bs_content.find("strong", string="Rating")  # type: ignore
+        rating_tag = bs_content.find("strong", string="Rating")
         rating_value = 0.0
-        if rating_tag and rating_tag.next_sibling:  # type: ignore[attr-defined]
+        if rating_tag and rating_tag.next_sibling:
             try:
-                rating_text = rating_tag.next_sibling.strip().split("/")[0]  # type: ignore[attr-defined]
+                rating_text = rating_tag.next_sibling.strip().split("/")[0]
                 rating_value = float(rating_text)
             except Exception:
                 pass
@@ -259,12 +260,12 @@ class WalkhighlandsService:
         # --- 6. Start Location ---
         # Find string 'open in google maps'
         start_location = ""
-        maps_link = bs_content.find(  # type: ignore[call-arg]
+        maps_link = bs_content.find(
             "a",
             string=re.compile(r"\bopen in google maps\b", re.IGNORECASE),
         )
-        if maps_link:  # type: ignore[attr-defined]
-            start_location = maps_link.get("href", "")  # type: ignore[attr-defined]
+        if maps_link:
+            start_location = maps_link.get("href", "")
 
         try:
             walk_data_model = WalkData(
