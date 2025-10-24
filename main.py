@@ -1,4 +1,7 @@
 from src.walkhighlands.api import WalkhighlandsAPI
+from src.users.service import UsersService
+from src.exporter.csv_exporter import CsvExporter
+from src.users.data import UserData
 from src.users.api import UsersAPI
 import argparse
 import sys
@@ -68,6 +71,16 @@ def get_optimal_user_routes(args):
     UsersAPI.get_optimal_user_routes(args.users, args.number_of_routes, args.ascending)
 
 
+def export_user_routes_to_csv(args):
+    logger.info("Exporting user routes to CSV", extra={"cli_args": vars(args)})
+    user_id = UserData.get_user_id_for_name(args.user)
+    if not user_id:
+        logger.error("User not found", extra={"user": args.user})
+        return
+    walk_travel_infos = UsersService.calculate_user_total_times(user_id)
+    CsvExporter.export_user_walk_travel_info(args.user, walk_travel_infos, args.output)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Walkhighlands CLI Tool",
@@ -83,6 +96,7 @@ def main():
         directions: test to get driving directions
         walk-directions: Get walking directions for a user to a walk.
         optimal-routes: Get optimal routes for user walk.
+        export-csv: Export user walk data to a CSV file.
     """,
     )
 
@@ -141,6 +155,19 @@ def main():
         action="store_true",
         help="Sort routes in ascending total duration order",
     )
+    export_csv_parser = subparsers.add_parser(
+        "export-csv", help="Export user walk data to a CSV file"
+    )
+    export_csv_parser.add_argument(
+        "--user", type=str, required=True, help="User's name"
+    )
+    export_csv_parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        default=None,
+        help="Output file path for the CSV.",
+    )
 
     args = parser.parse_args()
 
@@ -161,6 +188,8 @@ def main():
             get_walk_directions_for_user(args)
         case "optimal-routes":
             get_optimal_user_routes(args)
+        case "export-csv":
+            export_user_routes_to_csv(args)
         case _:
             logger.error("Unknown command")
             sys.exit(1)

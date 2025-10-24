@@ -1,8 +1,12 @@
+from pathlib import Path
 from walkhighlands.service import WalkhighlandsService
 from walkhighlands.dtos import HillPageData, Walk, WalkData
 import pytest
 from bs4 import BeautifulSoup
 from unittest.mock import patch
+
+# Get the absolute path to the test data directory
+TEST_DATA_DIR = Path(__file__).parent / "test_data"
 
 
 class TestWalkhighlandsService:
@@ -25,7 +29,7 @@ class TestWalkhighlandsService:
         assert WalkhighlandsService._parse_altitude_string("abc") is None
 
     def test_parse_munro_table_data_success(self):
-        with open("src/walkhighlands/tests/test_data/munro_table.html", "r") as f:
+        with open(TEST_DATA_DIR / "munro_table.html", "r") as f:
             html_content = f.read()
         result = WalkhighlandsService.parse_munro_table_data(html_content)
 
@@ -67,7 +71,7 @@ class TestWalkhighlandsService:
         assert result == []
 
     def test_parse_walks_for_hill_success(self):
-        with open("src/walkhighlands/tests/test_data/hill_page_walks.html", "r") as f:
+        with open(TEST_DATA_DIR / "hill_page_walks.html", "r") as f:
             html_content = f.read()
         result = WalkhighlandsService.parse_walks_for_hill(html_content)
 
@@ -99,7 +103,7 @@ class TestWalkhighlandsService:
             1,  # For https://www.walkhighlands.co.uk/munros/ben-nevis
             2,  # For https://www.walkhighlands.co.uk/munros/ben-macdui
         ]
-        with open("src/walkhighlands/tests/test_data/walk_page_summits.html", "r") as f:
+        with open(TEST_DATA_DIR / "walk_page_summits.html", "r") as f:
             html_content = f.read()
         bs_content = BeautifulSoup(html_content, "html.parser")
         result = WalkhighlandsService._get_hill_ids(bs_content)
@@ -135,7 +139,7 @@ class TestWalkhighlandsService:
     @patch("walkhighlands.service.WalkhighlandsService._get_hill_ids")
     def test_parse_walk_data_success(self, mock_get_hill_ids):
         mock_get_hill_ids.return_value = [1]
-        with open("src/walkhighlands/tests/test_data/walk_data_page.html", "r") as f:
+        with open(TEST_DATA_DIR / "walk_data_page.html", "r") as f:
             html_content = f.read()
         walk_url = "https://www.walkhighlands.co.uk/fort-william/ben-nevis.shtml"
         result = WalkhighlandsService.parse_walk_data(html_content, walk_url)
