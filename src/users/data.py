@@ -42,7 +42,8 @@ class UserData:
                     duration INTEGER,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (user_id) REFERENCES users(id),
-                    FOREIGN KEY (walk_id) REFERENCES walks(id)
+                    FOREIGN KEY (walk_id) REFERENCES walks(id),
+                    UNIQUE(user_id, walk_id)
                 )
                 """
             )
@@ -129,7 +130,36 @@ class UserData:
                 )
                 conn.commit()
                 logger.debug("Walk directions saved successfully")
+        except sqlite3.IntegrityError:
+            logger.warning(
+                "Directions for this user and walk already exist.",
+                extra={"user_id": user_id, "walk_id": walk_id},
+            )
         except sqlite3.DatabaseError:
             logger.exception(
-                f"An error occurred while saving walk directions for user_id {user_id} and walk_id {walk_id}"
+                "An error occurred while saving walk directions",
+                extra={"user_id": user_id, "walk_id": walk_id},
             )
+
+    @staticmethod
+    def check_walk_directions_exist(user_id: int, walk_id: int) -> bool:
+        """Check if walk directions already exist for a user and walk."""
+        db_api = DatabaseAPI()
+        try:
+            with db_api.db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    SELECT 1 FROM user_walk_directions
+                    WHERE user_id = ? AND walk_id = ?
+                    """,
+                    (user_id, walk_id),
+                )
+                result = cursor.fetchone()
+                return result is not None
+        except sqlite3.Error:
+            logger.exception(
+                "An error occurred while checking walk directions",
+                extra={"user_id": user_id, "walk_id": walk_id},
+            )
+            return False

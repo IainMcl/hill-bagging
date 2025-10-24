@@ -90,12 +90,17 @@ def test_get_user_location_not_found(mock_user_data):
     mock_user_data.fetch_user_location.assert_called_once_with(name)
 
 
+@patch("src.users.api.UsersAPI._directions_already_saved", return_value=False)
 @patch("src.users.api.UsersService")
 @patch("src.users.api.MapsApi")
 @patch("src.users.api.WalkhighlandsAPI")
 @patch("src.users.api.UserData")
 def test_get_walk_directions_for_user(
-    mock_user_data, mock_walkhighlands_api, mock_maps_api, mock_users_service
+    mock_user_data,
+    mock_walkhighlands_api,
+    mock_maps_api,
+    mock_users_service,
+    mock_directions_already_saved,
 ):
     user = "test_user"
     user_id = 1
@@ -125,3 +130,49 @@ def test_get_walk_directions_for_user(
     mock_users_service.save_walk_directions_for_user.assert_called_once_with(
         user_id, walk_location.walk_id, map_response
     )
+
+
+@patch("src.users.api.UsersAPI._directions_already_saved", return_value=True)
+@patch("src.users.api.UsersService")
+@patch("src.users.api.MapsApi")
+@patch("src.users.api.WalkhighlandsAPI")
+@patch("src.users.api.UserData")
+def test_get_walk_directions_for_user_skips_existing(
+    mock_user_data,
+    mock_walkhighlands_api,
+    mock_maps_api,
+    mock_users_service,
+    mock_directions_already_saved,
+):
+    user = "test_user"
+    user_id = 1
+    user_location = LatLon(lat=55.84901, lon=-3.14373)
+    mock_user_data.fetch_user_location.return_value = (user_id, user_location)
+
+    walk_location = WalkStartLocationDTO(
+        walk_id=1, walk_start_location="56.90890,-4.23660"
+    )
+    mock_walkhighlands_api.get_walk_start_locations.return_value = [walk_location]
+
+    UsersAPI.get_walk_directions_for_user(user)
+
+    mock_user_data.fetch_user_location.assert_called_once_with(user)
+    mock_walkhighlands_api.get_walk_start_locations.assert_called_once()
+    mock_maps_api.get_driving_distance_and_time.assert_not_called()
+    mock_users_service.save_walk_directions_for_user.assert_not_called()
+
+
+@patch("src.users.api.UserData")
+def test_directions_already_saved_true(mock_user_data):
+    mock_user_data.check_walk_directions_exist.return_value = True
+    result = UsersAPI._directions_already_saved(1, 1)
+    assert result is True
+    mock_user_data.check_walk_directions_exist.assert_called_once_with(1, 1)
+
+
+@patch("src.users.api.UserData")
+def test_directions_already_saved_false(mock_user_data):
+    mock_user_data.check_walk_directions_exist.return_value = False
+    result = UsersAPI._directions_already_saved(1, 1)
+    assert result is False
+    mock_user_data.check_walk_directions_exist.assert_called_once_with(1, 1)

@@ -65,6 +65,12 @@ class UsersAPI:
             },
         )
         for walk in walk_starting_locations:
+            if UsersAPI._directions_already_saved(user_id, walk.walk_id):
+                logger.debug(
+                    "Directions already saved for user and walk",
+                    extra={"user": user, "walk_id": walk.walk_id},
+                )
+                continue
             try:
                 map_response = MapsApi.get_driving_distance_and_time(
                     origin=user_location_string, destination=walk.walk_start_location
@@ -72,8 +78,6 @@ class UsersAPI:
                 UsersService.save_walk_directions_for_user(
                     user_id, walk.walk_id, map_response
                 )
-                logger.info("Breaking after 1 for testing")
-                break
             except Exception as e:
                 logger.error(
                     "Error fetching and saving directions for user",
@@ -83,3 +87,7 @@ class UsersAPI:
     @staticmethod
     def _parse_lat_lon_to_string(location: LatLon) -> str:
         return f"{location.lat},{location.lon}"
+
+    @staticmethod
+    def _directions_already_saved(user_id: int, walk_id: int) -> bool:
+        return UserData.check_walk_directions_exist(user_id, walk_id)

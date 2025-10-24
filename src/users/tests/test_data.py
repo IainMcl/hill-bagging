@@ -103,3 +103,25 @@ def test_save_walk_directions(mock_db_api):
     assert result[1] == walk_id
     assert result[2] == map_response.distance_meters
     assert result[3] == map_response.duration_seconds
+
+
+def test_save_walk_directions_duplicate(mock_db_api):
+    UserData.create_user_table()
+    UserData.create_user_walk_directions_table()
+
+    user_id = 1
+    walk_id = 1
+    map_response = MagicMock()
+    map_response.distance_meters = 1000
+    map_response.duration_seconds = 3600
+
+    # First save should be successful
+    UserData.save_walk_directions(user_id, walk_id, map_response)
+
+    # Second save should trigger the integrity error and log a warning
+    with patch("src.users.data.logger.warning") as mock_warning:
+        UserData.save_walk_directions(user_id, walk_id, map_response)
+        mock_warning.assert_called_once_with(
+            "Directions for this user and walk already exist.",
+            extra={"user_id": user_id, "walk_id": walk_id},
+        )

@@ -42,7 +42,7 @@ class CustomFormatter(logging.Formatter):
         return message
 
 
-def init_logging(level=logging.DEBUG):
+def init_logging(level=logging.INFO):
     # Get the root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(level)

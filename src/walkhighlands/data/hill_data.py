@@ -83,17 +83,23 @@ class WalkhighlandsData:
                 walk_id = cursor.lastrowid
                 logger.debug("Inserted walk.", extra={"walk_id": walk_id})
                 for hill_id in walk_data.hill_ids:
-                    logger.debug(
-                        "Inserting into walk_hill_decomposition",
-                        extra={"hill_id": hill_id, "walk_id": walk_id},
-                    )
-                    cursor.execute(
-                        """
-                        INSERT INTO walk_hill_decomposition (hill_id, walk_id)
-                        VALUES (?, ?)
-                        """,
-                        (hill_id, walk_id),
-                    )
+                    try:
+                        logger.debug(
+                            "Inserting into walk_hill_decomposition",
+                            extra={"hill_id": hill_id, "walk_id": walk_id},
+                        )
+                        cursor.execute(
+                            """
+                            INSERT INTO walk_hill_decomposition (hill_id, walk_id)
+                            VALUES (?, ?)
+                            """,
+                            (hill_id, walk_id),
+                        )
+                    except sqlite3.IntegrityError:
+                        logger.warning(
+                            "Duplicate entry for walk_hill_decomposition.",
+                            extra={"hill_id": hill_id, "walk_id": walk_id},
+                        )
                 conn.commit()
             logger.debug(
                 "Inserted walk data into the database.",
@@ -149,7 +155,8 @@ class WalkhighlandsData:
                     hill_id INTEGER NOT NULL,
                     walk_id INTEGER NOT NULL,
                     FOREIGN KEY (hill_id) REFERENCES hills(id),
-                    FOREIGN KEY (walk_id) REFERENCES walks(id)
+                    FOREIGN KEY (walk_id) REFERENCES walks(id),
+                    UNIQUE(hill_id, walk_id)
                 )
                 """
             )

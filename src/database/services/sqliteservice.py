@@ -20,7 +20,9 @@ class SQLiteService(DatabaseServiceInterface):
     def _create_database(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            logger.info("Created new SQLite database.", extra={"db_path": self.db_path})
+            logger.debug(
+                "Created new SQLite database.", extra={"db_path": self.db_path}
+            )
             self.connection.close()
             self.connection = None
         except sqlite3.Error as e:
@@ -30,7 +32,7 @@ class SQLiteService(DatabaseServiceInterface):
     def connect(self):
         try:
             self.connection = sqlite3.connect(self.db_path)
-            logger.info(
+            logger.debug(
                 "Connected to SQLite database.", extra={"db_path": self.db_path}
             )
         except sqlite3.Error as e:
@@ -41,7 +43,7 @@ class SQLiteService(DatabaseServiceInterface):
         if self.connection:
             self.connection.close()
             self.connection = None
-            logger.info("Disconnected from SQLite database")
+            logger.debug("Disconnected from SQLite database")
 
     def execute_query(self, query):
         if not self.connection:
